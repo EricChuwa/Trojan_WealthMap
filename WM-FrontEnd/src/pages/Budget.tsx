@@ -12,7 +12,6 @@ import {
   type FlowItem,
   type FlowLedger,
 } from "../api/flow";
-import { SessionExpiredError } from "../api/auth";
 
 type Tab = "overview" | "transactions";
 type Category = "need" | "want" | "saving";
@@ -93,11 +92,9 @@ export default function Budget() {
         setSelectedGroup(flow.groups[0].group_id);
       }
     } catch (err) {
-      if (err instanceof SessionExpiredError) {
-        navigate("/login");
-        return;
-      }
-      setError(err instanceof Error ? err.message : "Could not load Flow");
+      const message = err instanceof Error ? err.message : "Could not load Flow";
+      setError(message);
+      if (message.toLowerCase().includes("session")) navigate("/login");
     } finally {
       setLoading(false);
     }
@@ -364,22 +361,31 @@ export default function Budget() {
                   Category
                 </label>
                 <div className="flex gap-2 mt-2 mb-5">
-                  {(["need", "want", "saving"] as Category[]).map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setGroupCategory(c)}
-                      className="px-3 py-1.5 rounded-full text-xs border transition-opacity"
-                      style={{
-                        borderColor: categoryColor[c],
-                        color: categoryColor[c],
-                        opacity: groupCategory === c ? 1 : 0.4,
-                        background:
-                          groupCategory === c ? `${categoryColor[c]}18` : "transparent",
-                      }}
-                    >
-                      {categoryLabel[c]}
-                    </button>
-                  ))}
+                  {(["need", "want", "saving"] as Category[]).map((c) => {
+                    const selected = groupCategory === c;
+                    return (
+                      <button
+                        key={c}
+                        onClick={() => setGroupCategory(c)}
+                        className="px-4 py-2 rounded-full text-xs font-medium border-2 transition-all"
+                        style={
+                          selected
+                            ? {
+                                borderColor: categoryColor[c],
+                                backgroundColor: categoryColor[c],
+                                color: "var(--color-obsidian)",
+                              }
+                            : {
+                                borderColor: categoryColor[c],
+                                backgroundColor: `${categoryColor[c]}22`,
+                                color: categoryColor[c],
+                              }
+                        }
+                      >
+                        {categoryLabel[c]}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <label className="text-xs uppercase tracking-wider text-[var(--color-text-muted)]">
