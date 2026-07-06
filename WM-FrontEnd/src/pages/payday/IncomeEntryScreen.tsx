@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const MAX_DIGITS = 10;
@@ -26,6 +26,20 @@ export default function IncomeEntryScreen() {
     if (digits.length >= MAX_DIGITS) return;
     setDigits(d => d + key);
   }, [digits]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key >= '0' && e.key <= '9') {
+        handleKey(e.key);
+      } else if (e.key === 'Backspace' || e.key === 'Delete') {
+        handleKey('backspace');
+      } else if (e.key === 'Enter') {
+        if (canContinue) handleContinue();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  });
 
   const income = digits ? parseInt(digits, 10) : 0;
   const canContinue = income >= 1;
