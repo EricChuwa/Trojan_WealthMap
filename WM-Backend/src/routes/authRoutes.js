@@ -1,49 +1,51 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../utils/jwt");
+const { register } = require("../controllers/authController");
+const users = require("../data/users");
 
 const router = express.Router();
 
-/*
- * Demo login route.
- * Replace the hard-coded credentials with database validation later.
- */
+// Register a new user
+router.post("/register", register);
+
+// Login
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
-    const demoUser = {
-        id: 1,
-        email: "admin@trojan.com",
-        passwordHash: await bcrypt.hash("password123", 10),
-    };
+    // Find user by email
+    const user = users.find(user => user.email === email);
 
-    if (email !== demoUser.email) {
+    if (!user) {
         return res.status(401).json({
             success: false,
-            message: "Invalid credentials",
+            message: "Invalid credentials"
         });
     }
 
+    // Compare password with stored hash
     const validPassword = await bcrypt.compare(
         password,
-        demoUser.passwordHash
+        user.passwordHash
     );
 
     if (!validPassword) {
         return res.status(401).json({
             success: false,
-            message: "Invalid credentials",
+            message: "Invalid credentials"
         });
     }
 
+    // Generate JWT
     const token = generateToken({
-        id: demoUser.id,
-        email: demoUser.email,
+        id: user.id,
+        email: user.email
     });
 
-    res.json({
+    res.status(200).json({
         success: true,
-        token,
+        message: "Login successful",
+        token
     });
 });
 
