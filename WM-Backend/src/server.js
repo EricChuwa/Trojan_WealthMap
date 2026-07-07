@@ -1,7 +1,8 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").resolve(__dirname, "../../.env") });
 
 const express = require("express");
 const cors = require("cors");
+const budgetRoutes = require("./routes/budgetRoutes");
 
 const authRoutes = require("./routes/authRoutes");
 const authenticateToken = require("./middleware/authMiddleware");
@@ -12,6 +13,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/budget", budgetRoutes);
+
 
 app.get("/", (req, res) => {
     res.json({
