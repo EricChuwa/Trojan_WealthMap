@@ -1,4 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+@theme {
+  --color-obsidian: #0f0f0f;
+  --color-card: #1a1a1a;
+  --color-emerald: #1b4d3e;
+  --color-emerald-light: #2d7a5f;
+  --color-gold: #b8860b;
+  --color-gold-light: #d4a017;
+  --color-sapphire: #1b3a6b;
+  --color-text-primary: #f5f3ef;
+  --color-text-muted: #9a9a9a;
+  --color-border: #2a2a2a;
+
+  --font-display: "Cormorant Garamond", serif;
+  --font-body: "DM Sans", sans-serif;
+}
 
 :root {
   --bg-base: #0D0D0D;
