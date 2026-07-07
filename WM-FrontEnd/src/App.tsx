@@ -1,10 +1,13 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import IncomeEntryScreen from "./pages/payday/IncomeEntryScreen";
+import SplitScreen from "./pages/payday/SplitScreen";
+import "./index.css";
 
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
       <Routes>
@@ -12,9 +15,10 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/payday" element={<IncomeEntryScreen />} />
+        <Route path="/payday/split" element={<SplitScreen />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
-export default App;
