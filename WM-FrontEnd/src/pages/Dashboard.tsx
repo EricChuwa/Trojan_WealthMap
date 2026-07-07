@@ -4,7 +4,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-8 py-10 relative">
+      <div className="max-w-7xl mx-auto px-8 py-10 relative">
         {/* Faint accent glow */}
         <div className="absolute -top-10 right-0 w-96 h-96 rounded-full bg-gradient-to-br from-[var(--color-emerald-light)] to-[var(--color-gold)] opacity-10 blur-3xl pointer-events-none" />
 
@@ -37,14 +37,14 @@ export default function Dashboard() {
                   <p className="text-xs text-[var(--color-text-muted)] mb-1">
                     Income
                   </p>
-                  <p className="font-mono text-xl">KES 45,000</p>
+                  <p className="font-mono text-xl">RWF 450,000</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-[var(--color-text-muted)] mb-1">
                     Spent
                   </p>
                   <p className="font-mono text-xl text-[var(--color-gold-light)]">
-                    KES 31,200
+                    RWF 150,000
                   </p>
                 </div>
               </div>
@@ -122,8 +122,8 @@ export default function Dashboard() {
               </p>
               <p className="text-xs opacity-80 mb-6">~10%/yr return</p>
               <div className="flex justify-between items-end">
-                <p className="font-mono text-xs opacity-80">Min. KES 1,000</p>
-                <p className="font-mono text-lg">KES 142,500</p>
+                <p className="font-mono text-xs opacity-80">Min. RWF 10,000</p>
+                <p className="font-mono text-lg">RWF 1,420,500</p>
               </div>
             </div>
             <div className="rounded-xl p-6 bg-gradient-to-br from-[var(--color-sapphire)] to-[#0C1E3D]">
@@ -132,8 +132,8 @@ export default function Dashboard() {
               </p>
               <p className="text-xs opacity-80 mb-6">~12%/yr return</p>
               <div className="flex justify-between items-end">
-                <p className="font-mono text-xs opacity-80">Min. KES 50,000</p>
-                <p className="font-mono text-lg">KES 85,000</p>
+                <p className="font-mono text-xs opacity-80">Min. RWF 500,000</p>
+                <p className="font-mono text-lg">RWF 850,000</p>
               </div>
             </div>
           </div>
