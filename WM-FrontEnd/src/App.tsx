@@ -3,8 +3,8 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import IncomeEntryScreen from "./pages/payday/IncomeEntryScreen";
-import SplitScreen from "./pages/payday/SplitScreen";
+import IncomeEntryScreen from "./pages/IncomeEntryScreen";
+import SplitScreen from "./pages/SplitScreen";
 import "./index.css";
 
 export default function App() {
