@@ -1,19 +1,16 @@
 const express = require("express");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { generateToken } = require("../utils/jwt");
 const { register } = require("../controllers/authController");
 const users = require("../data/users");
 
 const router = express.Router();
 
-// Register a new user
 router.post("/register", register);
 
-// Login
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
-    // Find user by email
     const user = users.find(user => user.email === email);
 
     if (!user) {
@@ -23,7 +20,6 @@ router.post("/login", async (req, res) => {
         });
     }
 
-    // Compare password with stored hash
     const validPassword = await bcrypt.compare(
         password,
         user.passwordHash
@@ -36,7 +32,6 @@ router.post("/login", async (req, res) => {
         });
     }
 
-    // Generate JWT
     const token = generateToken({
         id: user.id,
         email: user.email
