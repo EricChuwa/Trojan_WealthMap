@@ -29,14 +29,12 @@ export default function Navbar() {
           </Link>
         ))}
       </div>
-      <div className="flex items-center gap-6">
-        <Link
-          to="/scams"
-          className="text-xs md:text-sm text-[var(--color-gold-light)] hover:text-white px-3 py-1.5 rounded-lg border border-[var(--color-gold-light)]/20 hover:border-[var(--color-gold-light)]/50 transition-all flex items-center gap-1.5"
-        >
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]/40 select-none cursor-default">
           <span>Smell test</span>
-          <span>🛡️</span>
-        </Link>
+          <span className="text-base">🔍</span>
+          <span className="text-base">🛡️</span>
+        </div>
         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-sapphire)] to-[var(--color-emerald)] border border-[var(--color-border)] flex items-center justify-center text-xs font-semibold text-white shadow-md">
           RC
         </div>
