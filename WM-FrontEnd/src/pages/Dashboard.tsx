@@ -15,7 +15,7 @@ export default function Dashboard() {
               Good morning,{" "}
               <span className="text-[var(--color-text-primary)]">Raphael</span>
             </p>
-            <div className="font-[var(--font-display)] text-7xl bg-gradient-to-b from-[var(--color-text-primary)] to-[var(--color-gold-light)] bg-clip-text text-transparent">
+            <div className="font-[family-name:var(--font-display)] text-7xl bg-gradient-to-b from-[var(--color-text-primary)] to-[var(--color-gold-light)] bg-clip-text text-transparent">
               72
             </div>
             <p className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] mt-1 mb-4">
@@ -54,7 +54,7 @@ export default function Dashboard() {
               <p className="text-xs uppercase tracking-widest text-[var(--color-gold-light)] mb-2">
                 Priority today
               </p>
-              <p className="font-[var(--font-display)] text-lg mb-2">
+              <p className="font-[family-name:var(--font-display)] text-lg mb-2">
                 Complete <span className="text-[#2A9D8F]">"Staying Safe"</span>{" "}
                 — your Learn score is 15% below target.
               </p>
@@ -69,7 +69,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-6 relative z-10">
           <div>
             <div className="flex justify-between mb-4">
-              <p className="font-[var(--font-display)] text-2xl">Goals</p>
+              <p className="font-[family-name:var(--font-display)] text-2xl">Goals</p>
               <p className="text-xs text-[var(--color-text-muted)]">See all</p>
             </div>
             {[
@@ -97,7 +97,7 @@ export default function Dashboard() {
                 className="bg-[var(--color-card)] rounded-xl p-5 mb-3 flex justify-between items-center"
               >
                 <div>
-                  <p className="font-[var(--font-display)] text-lg">
+                  <p className="font-[family-name:var(--font-display)] text-lg">
                     {goal.name}
                   </p>
                   <p className="text-xs text-[var(--color-text-muted)]">
@@ -111,13 +111,13 @@ export default function Dashboard() {
 
           <div>
             <div className="flex justify-between mb-4">
-              <p className="font-[var(--font-display)] text-2xl">
+              <p className="font-[family-name:var(--font-display)] text-2xl">
                 Investment roadmap
               </p>
               <p className="text-xs text-[var(--color-text-muted)]">See all</p>
             </div>
             <div className="rounded-xl p-6 mb-3 bg-gradient-to-br from-[var(--color-emerald-light)] to-[#0F2A21]">
-              <p className="font-[var(--font-display)] text-lg">
+              <p className="font-[family-name:var(--font-display)] text-lg">
                 Money Market Fund
               </p>
               <p className="text-xs opacity-80 mb-6">~10%/yr return</p>
@@ -127,7 +127,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="rounded-xl p-6 bg-gradient-to-br from-[var(--color-sapphire)] to-[#0C1E3D]">
-              <p className="font-[var(--font-display)] text-lg">
+              <p className="font-[family-name:var(--font-display)] text-lg">
                 Treasury Bills
               </p>
               <p className="text-xs opacity-80 mb-6">~12%/yr return</p>

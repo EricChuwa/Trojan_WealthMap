@@ -12,7 +12,9 @@ export default function Navbar() {
   const location = useLocation();
   return (
     <nav className="flex items-center justify-between px-8 py-5 border-b border-[var(--color-border)]">
-      <p className="font-[var(--font-display)] text-xl">WealthMap</p>
+      <p className="font-[family-name:var(--font-display)] text-xl">
+        Wealth<span className="text-[var(--color-gold-light)]">Map</span>
+      </p>
       <div className="flex gap-8">
         {links.map((link) => (
           <Link
