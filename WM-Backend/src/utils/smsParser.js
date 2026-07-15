@@ -11,6 +11,29 @@
 const AMOUNT = String.raw`([\d,]+(?:\.\d{1,2})?)`;
 const CUR = String.raw`(?:RWF|FRW|RF)`;
 
+// Anything that means money nearly moved but didn't. Checked BEFORE the
+// income/expense patterns below, because a failed message often still
+// mentions an amount and a recipient — without this check first it would
+// be misread as a real transaction.
+const FAILED_PATTERNS = [
+  { re: /insufficient (?:balance|funds)/i, reason: "insufficient_funds" },
+  { re: /\bdeclined\b/i, reason: "declined" },
+  { re: /transaction (?:has )?failed|payment (?:has )?failed|failed due to/i, reason: "transaction_failed" },
+  { re: /incorrect pin|wrong pin|invalid pin/i, reason: "incorrect_pin" },
+  { re: /could not be completed/i, reason: "not_completed" },
+  { re: /recipient (?:number )?not registered/i, reason: "recipient_not_registered" },
+  { re: /network error|please try again later/i, reason: "network_error" },
+  { re: /exceeds? (?:your )?(?:daily |transaction )?limit/i, reason: "limit_exceeded" },
+  { re: /transaction timed? ?out/i, reason: "timeout" },
+];
+
+function detectFailure(text) {
+  for (const { re, reason } of FAILED_PATTERNS) {
+    if (re.test(text)) return reason;
+  }
+  return null;
+}
+
 // Anything that means money arrived.
 const INCOMING_PATTERNS = [
   new RegExp(String.raw`you have received\s+${AMOUNT}\s*${CUR}`, "i"),
@@ -95,6 +118,14 @@ function parseMoMoMessage(message) {
   }
 
   const text = message.replace(/\s+/g, " ").trim();
+
+  // A failed transaction is a message we DO understand — we just know,
+  // deliberately, that no money moved, so it must never become a
+  // transaction row. This is distinct from "couldn't parse this at all".
+  const failureReason = detectFailure(text);
+  if (failureReason) {
+    return { ok: false, isFailedTxn: true, reason: failureReason, raw_message: message };
+  }
 
   let type = null;
   let amount = firstMatch(text, INCOMING_PATTERNS);
