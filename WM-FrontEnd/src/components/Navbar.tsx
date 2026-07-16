@@ -19,7 +19,8 @@ export default function Navbar() {
             key={link.path}
             to={link.path}
             className={`text-sm pb-1 border-b ${
-              location.pathname === link.path
+              location.pathname === link.path ||
+              (link.path === "/learn" && location.pathname === "/scams")
                 ? "text-[var(--color-text-primary)] border-[var(--color-gold-light)]"
                 : "text-[var(--color-text-muted)] border-transparent"
             }`}
@@ -29,10 +30,14 @@ export default function Navbar() {
         ))}
       </div>
       <div className="flex items-center gap-4">
-        <div className="w-8 h-8 rounded-full border border-[var(--color-border)] flex items-center justify-center text-xs">
-          🛡
+        <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] px-3 py-1.5 rounded-lg border border-[var(--color-border)]/40 select-none cursor-default">
+          <span>Smell test</span>
+          <span className="text-base">🔍</span>
+          <span className="text-base">🛡️</span>
         </div>
-        <div className="w-8 h-8 rounded-full bg-[var(--color-sapphire)]" />
+        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-sapphire)] to-[var(--color-emerald)] border border-[var(--color-border)] flex items-center justify-center text-xs font-semibold text-white shadow-md">
+          RC
+        </div>
       </div>
     </nav>
   );
