@@ -36,7 +36,7 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
       <form onSubmit={handleSubmit} className="w-full max-w-sm">
-        <h1 className="font-[var(--font-display)] text-4xl mb-2">
+        <h1 className="font-[family-name:var(--font-display)] text-4xl mb-2">
           Create your account.
         </h1>
         <p className="text-[var(--color-text-muted)] mb-8">

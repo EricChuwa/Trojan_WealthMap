@@ -4,7 +4,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-8 py-10 relative">
+      <div className="max-w-7xl mx-auto px-8 py-10 relative">
         {/* Faint accent glow */}
         <div className="absolute -top-10 right-0 w-96 h-96 rounded-full bg-gradient-to-br from-[var(--color-emerald-light)] to-[var(--color-gold)] opacity-10 blur-3xl pointer-events-none" />
 
@@ -15,7 +15,7 @@ export default function Dashboard() {
               Good morning,{" "}
               <span className="text-[var(--color-text-primary)]">Raphael</span>
             </p>
-            <div className="font-[var(--font-display)] text-7xl bg-gradient-to-b from-[var(--color-text-primary)] to-[var(--color-gold-light)] bg-clip-text text-transparent">
+            <div className="font-[family-name:var(--font-display)] text-7xl bg-gradient-to-b from-[var(--color-text-primary)] to-[var(--color-gold-light)] bg-clip-text text-transparent">
               72
             </div>
             <p className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] mt-1 mb-4">
@@ -37,14 +37,14 @@ export default function Dashboard() {
                   <p className="text-xs text-[var(--color-text-muted)] mb-1">
                     Income
                   </p>
-                  <p className="font-mono text-xl">KES 45,000</p>
+                  <p className="font-mono text-xl">RWF 450,000</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-[var(--color-text-muted)] mb-1">
                     Spent
                   </p>
                   <p className="font-mono text-xl text-[var(--color-gold-light)]">
-                    KES 31,200
+                    RWF 150,000
                   </p>
                 </div>
               </div>
@@ -54,7 +54,7 @@ export default function Dashboard() {
               <p className="text-xs uppercase tracking-widest text-[var(--color-gold-light)] mb-2">
                 Priority today
               </p>
-              <p className="font-[var(--font-display)] text-lg mb-2">
+              <p className="font-[family-name:var(--font-display)] text-lg mb-2">
                 Complete <span className="text-[#2A9D8F]">"Staying Safe"</span>{" "}
                 — your Learn score is 15% below target.
               </p>
@@ -69,7 +69,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-6 relative z-10">
           <div>
             <div className="flex justify-between mb-4">
-              <p className="font-[var(--font-display)] text-2xl">Goals</p>
+              <p className="font-[family-name:var(--font-display)] text-2xl">Goals</p>
               <p className="text-xs text-[var(--color-text-muted)]">See all</p>
             </div>
             {[
@@ -97,7 +97,7 @@ export default function Dashboard() {
                 className="bg-[var(--color-card)] rounded-xl p-5 mb-3 flex justify-between items-center"
               >
                 <div>
-                  <p className="font-[var(--font-display)] text-lg">
+                  <p className="font-[family-name:var(--font-display)] text-lg">
                     {goal.name}
                   </p>
                   <p className="text-xs text-[var(--color-text-muted)]">
@@ -111,29 +111,29 @@ export default function Dashboard() {
 
           <div>
             <div className="flex justify-between mb-4">
-              <p className="font-[var(--font-display)] text-2xl">
+              <p className="font-[family-name:var(--font-display)] text-2xl">
                 Investment roadmap
               </p>
               <p className="text-xs text-[var(--color-text-muted)]">See all</p>
             </div>
             <div className="rounded-xl p-6 mb-3 bg-gradient-to-br from-[var(--color-emerald-light)] to-[#0F2A21]">
-              <p className="font-[var(--font-display)] text-lg">
+              <p className="font-[family-name:var(--font-display)] text-lg">
                 Money Market Fund
               </p>
               <p className="text-xs opacity-80 mb-6">~10%/yr return</p>
               <div className="flex justify-between items-end">
-                <p className="font-mono text-xs opacity-80">Min. KES 1,000</p>
-                <p className="font-mono text-lg">KES 142,500</p>
+                <p className="font-mono text-xs opacity-80">Min. RWF 10,000</p>
+                <p className="font-mono text-lg">RWF 1,420,500</p>
               </div>
             </div>
             <div className="rounded-xl p-6 bg-gradient-to-br from-[var(--color-sapphire)] to-[#0C1E3D]">
-              <p className="font-[var(--font-display)] text-lg">
+              <p className="font-[family-name:var(--font-display)] text-lg">
                 Treasury Bills
               </p>
               <p className="text-xs opacity-80 mb-6">~12%/yr return</p>
               <div className="flex justify-between items-end">
-                <p className="font-mono text-xs opacity-80">Min. KES 50,000</p>
-                <p className="font-mono text-lg">KES 85,000</p>
+                <p className="font-mono text-xs opacity-80">Min. RWF 500,000</p>
+                <p className="font-mono text-lg">RWF 850,000</p>
               </div>
             </div>
           </div>
