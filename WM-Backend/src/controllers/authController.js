@@ -1,6 +1,7 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const pool = require("../config/db");
 const { generateToken } = require("../utils/jwt");
+const { isValidEmail, isValidPassword } = require("../utils/validators");
 
 const register = async (req, res) => {
   const {
@@ -17,6 +18,20 @@ const register = async (req, res) => {
     return res.status(400).json({
       success: false,
       message: "Please fill in all required fields.",
+    });
+  }
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({
+      success: false,
+      message: "Please provide a valid email address.",
+    });
+  }
+
+  if (!isValidPassword(password)) {
+    return res.status(400).json({
+      success: false,
+      message: "Password must be at least 8 characters long.",
     });
   }
 
