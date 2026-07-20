@@ -1,15 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import IncomeEntryScreen from "./pages/IncomeEntryScreen";
-import SplitScreen from "./pages/SplitScreen";
-import Learn from "./pages/Learn";
-import ScamAwareness from "./pages/ScamAwareness";
-import "./index.css";
+import HealthHistory from "./pages/HealthHistory";
 
-export default function App() {
+function App() {
   return (
     <BrowserRouter>
       <Routes>
@@ -17,12 +13,10 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/payday" element={<IncomeEntryScreen />} />
-        <Route path="/payday/split" element={<SplitScreen />} />
-        <Route path="/learn" element={<Learn />} />
-        <Route path="/scams" element={<ScamAwareness />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/health-history" element={<HealthHistory />} />
       </Routes>
     </BrowserRouter>
   );
 }
+
+export default App;

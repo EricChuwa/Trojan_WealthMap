@@ -1,4 +1,5 @@
 import Navbar from "../components/Navbar";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   return (
@@ -10,7 +11,10 @@ export default function Dashboard() {
 
         {/* Hero: two columns */}
         <div className="grid grid-cols-2 gap-6 relative z-10 mb-10">
-          <div className="bg-[var(--color-card)] rounded-2xl p-8">
+          <Link
+            to="/health-history"
+            className="block bg-[var(--color-card)] rounded-2xl p-8 hover:bg-[var(--color-card)]/80 transition-colors cursor-pointer"
+          >
             <p className="text-sm text-[var(--color-text-muted)] mb-6">
               Good morning,{" "}
               <span className="text-[var(--color-text-primary)]">Raphael</span>
@@ -25,7 +29,7 @@ export default function Dashboard() {
               Your literacy score is your lowest area — one lesson today would
               move the needle.
             </p>
-          </div>
+          </Link>
 
           <div className="flex flex-col gap-6">
             <div className="bg-[var(--color-card)] rounded-2xl p-6">
@@ -69,7 +73,9 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-6 relative z-10">
           <div>
             <div className="flex justify-between mb-4">
-              <p className="font-[family-name:var(--font-display)] text-2xl">Goals</p>
+              <p className="font-[family-name:var(--font-display)] text-2xl">
+                Goals
+              </p>
               <p className="text-xs text-[var(--color-text-muted)]">See all</p>
             </div>
             {[
