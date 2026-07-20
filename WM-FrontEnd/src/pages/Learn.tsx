@@ -31,9 +31,7 @@ function SkillCircle({
   return (
     <div className="bg-card border border-border/80 rounded-2xl p-5 flex flex-col items-center justify-center text-center w-full aspect-square transition-all duration-300 hover:border-border hover:shadow-lg hover:shadow-gold-light/2 select-none">
       {isLocked ? (
-        <div className="w-16 h-16 rounded-full bg-obsidian border border-border flex items-center justify-center text-xl text-text-muted mb-4">
-          🔒
-        </div>
+        <div className="w-16 h-16 rounded-full bg-obsidian border border-border flex items-center justify-center text-xl text-text-muted mb-4"></div>
       ) : (
         <div className="relative w-16 h-16 mb-4 flex items-center justify-center">
           <svg className="w-full h-full -rotate-90">
@@ -100,7 +98,7 @@ export default function Learn() {
               <span className="font-mono font-bold text-xl text-[var(--color-gold-light)]">
                 84%
               </span>
-              <span className="text-base">🏆</span>
+              <span className="text-base"></span>
             </div>
           </div>
         </div>
@@ -198,7 +196,7 @@ export default function Learn() {
                   The Psychology of Money
                 </h4>
                 <p className="text-xs text-text-muted flex items-center gap-1.5">
-                  <span>⏱️ 45 mins</span>
+                  <span>45 mins</span>
                   <span>•</span>
                   <span>3 Lessons</span>
                 </p>
@@ -227,7 +225,7 @@ export default function Learn() {
                   Strategic Saving
                 </h4>
                 <p className="text-xs text-text-muted flex items-center gap-1.5">
-                  <span>⏱️ 1h 20m</span>
+                  <span>1h 20m</span>
                   <span>•</span>
                   <span>5 Lessons</span>
                 </p>
@@ -256,7 +254,7 @@ export default function Learn() {
                   Index Funds & ETFs
                 </h4>
                 <p className="text-xs text-text-muted flex items-center gap-1.5">
-                  <span>⏱️ 2h 15m</span>
+                  <span>2h 15m</span>
                   <span>•</span>
                   <span>8 Lessons</span>
                 </p>
@@ -275,16 +273,12 @@ export default function Learn() {
             </div>
 
             <div className="bg-card/60 border border-border/40 rounded-xl p-4 flex items-center gap-4 select-none opacity-80">
-              <div className="w-16 h-16 rounded-xl bg-obsidian/60 border border-border/50 flex items-center justify-center text-xl text-text-muted">
-                🔒
-              </div>
+              <div className="w-16 h-16 rounded-xl bg-obsidian/60 border border-border/50 flex items-center justify-center text-xl text-text-muted"></div>
               <div className="flex-1 min-w-0">
                 <h4 className="font-display text-lg text-text-muted truncate mb-1">
                   Advanced Tax Strategies
                 </h4>
-                <p className="text-xs text-text-muted">
-                  ⏱️ 3h 10m · Masterclass
-                </p>
+                <p className="text-xs text-text-muted">3h 10m · Masterclass</p>
               </div>
               <div className="text-right">
                 <span className="text-xs font-semibold px-2 py-0.5 rounded bg-border text-text-muted">
@@ -297,9 +291,7 @@ export default function Learn() {
               onClick={() => navigate("/scams")}
               className="bg-card border border-amber-500/20 hover:border-amber-500/40 rounded-xl p-4 flex items-center gap-4 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/5 cursor-pointer md:col-span-2 group"
             >
-              <div className="w-16 h-16 rounded-xl bg-amber-950/20 border border-amber-900/40 flex items-center justify-center text-3xl group-hover:scale-105 transition-transform">
-                🛡️
-              </div>
+              <div className="w-16 h-16 rounded-xl bg-amber-950/20 border border-amber-900/40 flex items-center justify-center text-3xl group-hover:scale-105 transition-transform"></div>
               <div className="flex-1 min-w-0">
                 <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest block mb-0.5">
                   Security Layer
@@ -315,7 +307,7 @@ export default function Learn() {
               <div className="text-right">
                 <span className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 group-hover:bg-amber-500 group-hover:text-obsidian transition-all flex items-center gap-1">
                   <span>Safety Alerts</span>
-                  <span>🚨</span>
+                  <span></span>
                 </span>
               </div>
             </div>

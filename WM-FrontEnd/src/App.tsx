@@ -7,6 +7,7 @@ import IncomeEntryScreen from "./pages/IncomeEntryScreen";
 import SplitScreen from "./pages/SplitScreen";
 import Learn from "./pages/Learn";
 import ScamAwareness from "./pages/ScamAwareness";
+import Goals from "./pages/Goals";
 import "./index.css";
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/payday/split" element={<SplitScreen />} />
         <Route path="/learn" element={<Learn />} />
         <Route path="/scams" element={<ScamAwareness />} />
+        <Route path="/goals" element={<Goals />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
