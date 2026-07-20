@@ -5,6 +5,8 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import HealthHistory from "./pages/HealthHistory";
 import Budget from "./pages/Budget";
+import InvestmentRoadmap from "./pages/InvestmentRoadmap";
+import InvestmentDetail from "./pages/InvestmentDetail";
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/health-history" element={<HealthHistory />} />
         <Route path="/budget" element={<Budget />} />
+        <Route path="/invest" element={<InvestmentRoadmap />} />
+<Route path="/invest/:id" element={<InvestmentDetail />} />
       </Routes>
     </BrowserRouter>
   );
