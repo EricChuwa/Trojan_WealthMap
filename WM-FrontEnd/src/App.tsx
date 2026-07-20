@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import HealthHistory from "./pages/HealthHistory";
+import Budget from "./pages/Budget";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/health-history" element={<HealthHistory />} />
+        <Route path="/budget" element={<Budget />} />
       </Routes>
     </BrowserRouter>
   );
