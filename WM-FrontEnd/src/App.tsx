@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -13,6 +13,7 @@ import Learn from "./pages/Learn";
 import ScamAwareness from "./pages/ScamAwareness";
 import Goals from "./pages/Goals";
 import "./index.css";
+import SmellTest from "./pages/SmellTest";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route path="/learn" element={<Learn />} />
         <Route path="/scams" element={<ScamAwareness />} />
         <Route path="/goals" element={<Goals />} />
+        <Route path="/smell-test" element={<SmellTest />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
