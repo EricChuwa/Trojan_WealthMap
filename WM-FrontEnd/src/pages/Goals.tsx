@@ -63,7 +63,53 @@ function fmt(n: number) {
   return "RWF " + n.toLocaleString();
 }
 
-function GoalCard({ goal }: { goal: Goal }) {
+function IconEdit() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z" />
+    </svg>
+  );
+}
+function IconTrash() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14H6L5 6" />
+      <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+    </svg>
+  );
+}
+
+function GoalCard({
+  goal,
+  onEdit,
+  onDelete,
+}: {
+  goal: Goal;
+  onEdit: (g: Goal) => void;
+  onDelete: (id: number) => void;
+}) {
   const pct = Math.min(
     Math.round((goal.savedAmount / goal.targetAmount) * 100),
     100,
@@ -74,10 +120,41 @@ function GoalCard({ goal }: { goal: Goal }) {
 
   return (
     <div
-      className="rounded-2xl p-6 flex flex-col gap-4 transition-all duration-300 hover:brightness-110"
+      className="rounded-2xl p-6 flex flex-col gap-4 transition-all duration-300 hover:brightness-110 relative group"
       style={{ background: bg, border: `1px solid ${accent}33` }}
     >
-      <div className="flex items-start justify-between">
+      {/* Edit / Delete buttons — fade in on hover */}
+      <div
+        className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        style={{ zIndex: 10 }}
+      >
+        <button
+          onClick={() => onEdit(goal)}
+          title="Edit goal"
+          className="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110"
+          style={{
+            background: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.14)",
+            color: accent,
+          }}
+        >
+          <IconEdit />
+        </button>
+        <button
+          onClick={() => onDelete(goal.id)}
+          title="Delete goal"
+          className="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110"
+          style={{
+            background: "rgba(255,60,60,0.10)",
+            border: "1px solid rgba(255,60,60,0.22)",
+            color: "#ff6b6b",
+          }}
+        >
+          <IconTrash />
+        </button>
+      </div>
+
+      <div className="flex items-start justify-between pr-16">
         <div>
           <p
             className="font-[family-name:var(--font-display)] text-xl leading-tight"
@@ -89,7 +166,7 @@ function GoalCard({ goal }: { goal: Goal }) {
             className="text-xs mt-1"
             style={{ color: "var(--color-text-muted)" }}
           >
-            {isComplete ? "Completed" : `${goal.monthsLeft} months left`}
+            {isComplete ? "Completed ✓" : `${goal.monthsLeft} months left`}
           </p>
         </div>
         <span
@@ -142,6 +219,16 @@ export default function Goals() {
   });
   const [goals, setGoals] = useState<Goal[]>(initialGoals);
 
+  /* ── Edit state ── */
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    targetAmount: "",
+    savedAmount: "",
+    monthsLeft: "",
+    category: "savings" as Goal["category"],
+  });
+
   const filtered =
     activeFilter === "all"
       ? goals
@@ -169,6 +256,47 @@ export default function Goals() {
       category: "savings",
     });
     setShowModal(false);
+  }
+
+  function openEdit(goal: Goal) {
+    setEditingGoal(goal);
+    setEditForm({
+      name: goal.name,
+      targetAmount: String(goal.targetAmount),
+      savedAmount: String(goal.savedAmount),
+      monthsLeft: String(goal.monthsLeft),
+      category: goal.category,
+    });
+  }
+
+  function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingGoal) return;
+    setGoals((prev) =>
+      prev.map((g) =>
+        g.id === editingGoal.id
+          ? {
+              ...g,
+              name: editForm.name.trim() || g.name,
+              targetAmount: parseInt(editForm.targetAmount) || g.targetAmount,
+              savedAmount:
+                parseInt(editForm.savedAmount) >= 0
+                  ? parseInt(editForm.savedAmount)
+                  : g.savedAmount,
+              monthsLeft:
+                parseInt(editForm.monthsLeft) >= 0
+                  ? parseInt(editForm.monthsLeft)
+                  : g.monthsLeft,
+              category: editForm.category,
+            }
+          : g,
+      ),
+    );
+    setEditingGoal(null);
+  }
+
+  function handleDelete(id: number) {
+    setGoals((prev) => prev.filter((g) => g.id !== id));
   }
 
   return (
@@ -310,7 +438,14 @@ export default function Goals() {
               No goals in this category yet.
             </p>
           ) : (
-            filtered.map((goal) => <GoalCard key={goal.id} goal={goal} />)
+            filtered.map((goal) => (
+              <GoalCard
+                key={goal.id}
+                goal={goal}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+              />
+            ))
           )}
         </div>
       </div>
@@ -457,6 +592,195 @@ export default function Goals() {
                   }}
                 >
                   Add Goal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Goal Modal ── */}
+      {editingGoal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}
+          onClick={() => setEditingGoal(null)}
+        >
+          <div
+            className="w-full max-w-md mx-4 rounded-2xl p-8 relative"
+            style={{
+              background: "var(--color-card)",
+              border: "1px solid var(--color-border)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <p
+                className="font-[family-name:var(--font-display)] text-2xl"
+                style={{ color: "var(--color-text-primary)" }}
+              >
+                Edit Goal
+              </p>
+              <span
+                className="text-xs px-2.5 py-1 rounded-full uppercase tracking-widest font-semibold"
+                style={{
+                  background: categoryBg[editingGoal.category],
+                  color: categoryColors[editingGoal.category],
+                  border: `1px solid ${categoryColors[editingGoal.category]}33`,
+                }}
+              >
+                {editingGoal.category}
+              </span>
+            </div>
+
+            <form onSubmit={handleEdit} className="flex flex-col gap-4">
+              {/* Name */}
+              <div>
+                <label
+                  className="block text-xs uppercase tracking-widest mb-1.5"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
+                  Goal name
+                </label>
+                <input
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+                  style={{
+                    background: "#0d0d0d",
+                    border: "1px solid var(--color-border)",
+                    color: "var(--color-text-primary)",
+                  }}
+                  value={editForm.name}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, name: e.target.value }))
+                  }
+                />
+              </div>
+
+              {/* Target amount */}
+              <div>
+                <label
+                  className="block text-xs uppercase tracking-widest mb-1.5"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
+                  Target amount (RWF)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full rounded-xl px-4 py-3 text-sm font-mono outline-none"
+                  style={{
+                    background: "#0d0d0d",
+                    border: "1px solid var(--color-border)",
+                    color: "var(--color-text-primary)",
+                  }}
+                  value={editForm.targetAmount}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, targetAmount: e.target.value }))
+                  }
+                />
+              </div>
+
+              {/* Saved so far */}
+              <div>
+                <label
+                  className="block text-xs uppercase tracking-widest mb-1.5"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
+                  Saved so far (RWF)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full rounded-xl px-4 py-3 text-sm font-mono outline-none"
+                  style={{
+                    background: "#0d0d0d",
+                    border: "1px solid var(--color-border)",
+                    color: "var(--color-text-primary)",
+                  }}
+                  value={editForm.savedAmount}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, savedAmount: e.target.value }))
+                  }
+                />
+              </div>
+
+              {/* Months left */}
+              <div>
+                <label
+                  className="block text-xs uppercase tracking-widest mb-1.5"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
+                  Months to reach goal
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full rounded-xl px-4 py-3 text-sm font-mono outline-none"
+                  style={{
+                    background: "#0d0d0d",
+                    border: "1px solid var(--color-border)",
+                    color: "var(--color-text-primary)",
+                  }}
+                  value={editForm.monthsLeft}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, monthsLeft: e.target.value }))
+                  }
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label
+                  className="block text-xs uppercase tracking-widest mb-1.5"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
+                  Category
+                </label>
+                <select
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none cursor-pointer"
+                  style={{
+                    background: "#0d0d0d",
+                    border: "1px solid var(--color-border)",
+                    color: "var(--color-text-primary)",
+                  }}
+                  value={editForm.category}
+                  onChange={(e) =>
+                    setEditForm((p) => ({
+                      ...p,
+                      category: e.target.value as Goal["category"],
+                    }))
+                  }
+                >
+                  <option value="savings">Savings</option>
+                  <option value="purchase">Purchase</option>
+                  <option value="emergency">Emergency</option>
+                  <option value="investment">Investment</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingGoal(null)}
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-80"
+                  style={{
+                    background: "transparent",
+                    border: "1px solid var(--color-border)",
+                    color: "var(--color-text-muted)",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5"
+                  style={{
+                    background: "var(--color-gold-light)",
+                    color: "#0d0d0d",
+                  }}
+                >
+                  Save Changes
                 </button>
               </div>
             </form>
