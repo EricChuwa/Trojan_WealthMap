@@ -6,6 +6,7 @@ const express = require("express");
 const cors = require("cors");
 const budgetRoutes = require("./routes/budgetRoutes");
 const smellTestRoutes = require("./routes/smellTestRoutes");
+const flowRoutes = require("./routes/flowRoutes");
 
 const authRoutes = require("./routes/authRoutes");
 const fraudRoutes = require("./routes/fraudRoutes");
@@ -21,6 +22,7 @@ app.use("/api/budget", budgetRoutes);
 app.use("/api/smell-test", smellTestRoutes);
 app.use("/api/fraud", fraudRoutes);
 app.use("/fraud", fraudRoutes);
+app.use("/api/flow", flowRoutes);
 
 app.get("/", (req, res) => {
   res.json({
