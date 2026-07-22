@@ -4,8 +4,10 @@ require("dotenv").config({
 
 const express = require("express");
 const cors = require("cors");
+const morgan = require("morgan");
 const budgetRoutes = require("./routes/budgetRoutes");
 const smellTestRoutes = require("./routes/smellTestRoutes");
+const goalRoutes = require("./routes/goalRoutes");
 
 const authRoutes = require("./routes/authRoutes");
 const fraudRoutes = require("./routes/fraudRoutes");
@@ -15,9 +17,11 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(morgan("dev"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/budget", budgetRoutes);
+app.use("/api/goals", goalRoutes);
 app.use("/api/smell-test", smellTestRoutes);
 app.use("/api/fraud", fraudRoutes);
 app.use("/fraud", fraudRoutes);

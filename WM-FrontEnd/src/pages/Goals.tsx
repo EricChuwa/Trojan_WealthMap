@@ -1,49 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
-
-interface Goal {
-  id: number;
-  name: string;
-  targetAmount: number;
-  savedAmount: number;
-  monthsLeft: number;
-  category: "savings" | "purchase" | "emergency" | "investment";
-}
-
-const initialGoals: Goal[] = [
-  {
-    id: 1,
-    name: "Emergency Fund",
-    targetAmount: 1_500_000,
-    savedAmount: 510_000,
-    monthsLeft: 9,
-    category: "emergency",
-  },
-  {
-    id: 2,
-    name: "MacBook Pro",
-    targetAmount: 2_200_000,
-    savedAmount: 1_496_000,
-    monthsLeft: 6,
-    category: "purchase",
-  },
-  {
-    id: 3,
-    name: "Travel – Zanzibar",
-    targetAmount: 800_000,
-    savedAmount: 96_000,
-    monthsLeft: 11,
-    category: "savings",
-  },
-  {
-    id: 4,
-    name: "Investment Seed",
-    targetAmount: 500_000,
-    savedAmount: 500_000,
-    monthsLeft: 0,
-    category: "investment",
-  },
-];
+import {
+  fetchGoals,
+  createGoal,
+  updateGoal,
+  deleteGoal,
+  type Goal,
+} from "../api/goals";
 
 const categoryColors: Record<Goal["category"], string> = {
   emergency: "var(--color-gold-light)",
@@ -108,7 +71,7 @@ function GoalCard({
 }: {
   goal: Goal;
   onEdit: (g: Goal) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }) {
   const pct = Math.min(
     Math.round((goal.savedAmount / goal.targetAmount) * 100),
@@ -217,7 +180,27 @@ export default function Goals() {
     monthsLeft: "",
     category: "savings" as Goal["category"],
   });
-  const [goals, setGoals] = useState<Goal[]>(initialGoals);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  function refreshGoals() {
+    return fetchGoals()
+      .then(setGoals)
+      .catch((err: Error) => setLoadError(err.message))
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    refreshGoals();
+  }, []);
+
+  function retryLoad() {
+    setLoading(true);
+    setLoadError(null);
+    refreshGoals();
+  }
 
   /* ── Edit state ── */
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
@@ -236,26 +219,30 @@ export default function Goals() {
 
   const totalTarget = goals.reduce((s, g) => s + g.targetAmount, 0);
   const totalSaved = goals.reduce((s, g) => s + g.savedAmount, 0);
-  const overallPct = Math.round((totalSaved / totalTarget) * 100);
+  const overallPct =
+    totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
 
-  function handleAdd(e: React.FormEvent) {
+  async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    const next: Goal = {
-      id: Date.now(),
-      name: newGoal.name.trim() || "Untitled Goal",
-      targetAmount: parseInt(newGoal.targetAmount) || 100_000,
-      savedAmount: 0,
-      monthsLeft: parseInt(newGoal.monthsLeft) || 12,
-      category: newGoal.category,
-    };
-    setGoals((prev) => [next, ...prev]);
-    setNewGoal({
-      name: "",
-      targetAmount: "",
-      monthsLeft: "",
-      category: "savings",
-    });
-    setShowModal(false);
+    setActionError(null);
+    try {
+      const created = await createGoal({
+        name: newGoal.name.trim() || "Untitled Goal",
+        targetAmount: parseInt(newGoal.targetAmount) || 100_000,
+        monthsLeft: parseInt(newGoal.monthsLeft) || 12,
+        category: newGoal.category,
+      });
+      setGoals((prev) => [created, ...prev]);
+      setNewGoal({
+        name: "",
+        targetAmount: "",
+        monthsLeft: "",
+        category: "savings",
+      });
+      setShowModal(false);
+    } catch (err) {
+      setActionError((err as Error).message);
+    }
   }
 
   function openEdit(goal: Goal) {
@@ -269,34 +256,42 @@ export default function Goals() {
     });
   }
 
-  function handleEdit(e: React.FormEvent) {
+  async function handleEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editingGoal) return;
-    setGoals((prev) =>
-      prev.map((g) =>
-        g.id === editingGoal.id
-          ? {
-              ...g,
-              name: editForm.name.trim() || g.name,
-              targetAmount: parseInt(editForm.targetAmount) || g.targetAmount,
-              savedAmount:
-                parseInt(editForm.savedAmount) >= 0
-                  ? parseInt(editForm.savedAmount)
-                  : g.savedAmount,
-              monthsLeft:
-                parseInt(editForm.monthsLeft) >= 0
-                  ? parseInt(editForm.monthsLeft)
-                  : g.monthsLeft,
-              category: editForm.category,
-            }
-          : g,
-      ),
-    );
-    setEditingGoal(null);
+    setActionError(null);
+    try {
+      const updated = await updateGoal(editingGoal.id, {
+        name: editForm.name.trim() || editingGoal.name,
+        targetAmount:
+          parseInt(editForm.targetAmount) || editingGoal.targetAmount,
+        savedAmount:
+          parseInt(editForm.savedAmount) >= 0
+            ? parseInt(editForm.savedAmount)
+            : editingGoal.savedAmount,
+        monthsLeft:
+          parseInt(editForm.monthsLeft) > 0
+            ? parseInt(editForm.monthsLeft)
+            : editingGoal.monthsLeft,
+        category: editForm.category,
+      });
+      setGoals((prev) =>
+        prev.map((g) => (g.id === editingGoal.id ? updated : g)),
+      );
+      setEditingGoal(null);
+    } catch (err) {
+      setActionError((err as Error).message);
+    }
   }
 
-  function handleDelete(id: number) {
-    setGoals((prev) => prev.filter((g) => g.id !== id));
+  async function handleDelete(id: string) {
+    setActionError(null);
+    try {
+      await deleteGoal(id);
+      setGoals((prev) => prev.filter((g) => g.id !== id));
+    } catch (err) {
+      setActionError((err as Error).message);
+    }
   }
 
   return (
@@ -428,9 +423,45 @@ export default function Goals() {
           ))}
         </div>
 
+        {actionError && (
+          <div
+            className="relative z-10 mb-4 rounded-xl px-4 py-3 text-sm"
+            style={{
+              background: "rgba(255,60,60,0.10)",
+              border: "1px solid rgba(255,60,60,0.22)",
+              color: "#ff6b6b",
+            }}
+          >
+            {actionError}
+          </div>
+        )}
+
         {/* Goal cards grid */}
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <p
+              className="col-span-full text-center py-16"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              Loading your goals...
+            </p>
+          ) : loadError ? (
+            <div className="col-span-full flex flex-col items-center gap-4 py-16">
+              <p style={{ color: "var(--color-text-muted)" }}>
+                Couldn't load your goals — {loadError}
+              </p>
+              <button
+                onClick={retryLoad}
+                className="px-4 py-2 rounded-lg text-sm font-semibold"
+                style={{
+                  background: "var(--color-gold-light)",
+                  color: "#0d0d0d",
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
             <p
               className="col-span-full text-center py-16"
               style={{ color: "var(--color-text-muted)" }}

@@ -74,6 +74,7 @@ CREATE TABLE goals (
   target_amount    NUMERIC(14, 2) NOT NULL,
   target_date      DATE,
   monthly_required NUMERIC(14, 2),
+  saved_amount     NUMERIC(14, 2) NOT NULL DEFAULT 0,
   status           VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'abandoned'))
 );
 
