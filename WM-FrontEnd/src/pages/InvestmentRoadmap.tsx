@@ -3,12 +3,13 @@ import Navbar from "../components/Navbar";
 
 export const investmentOptions = [
   {
+    
     id: "government-bonds",
     level: 1,
     name: "Government Treasury Bonds",
     riskLabel: "Very low risk",
     country: "Rwanda",
-    minEntry: "RWF 100,000",
+    minEntry: "RWF 100,000", 
     yieldLabel: "~9–13% p.a.",
     yieldColor: "#2A9D8F",
     gradientFrom: "#2D7A5F",
