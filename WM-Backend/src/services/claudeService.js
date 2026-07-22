@@ -7,9 +7,8 @@ const anthropic = new Anthropic({
 async function analyzeInvestment(text) {
   try {
     const message = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-latest",
+      model: "claude-sonnet-5",
       max_tokens: 500,
-      temperature: 0.2,
 
       system: `
 You are WealthMap's AI Financial Fraud Analyst.
@@ -79,3 +78,4 @@ ${text}`,
 module.exports = {
   analyzeInvestment,
 };
+

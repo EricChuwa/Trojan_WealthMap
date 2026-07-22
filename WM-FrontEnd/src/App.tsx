@@ -12,6 +12,7 @@ import SplitScreen from "./pages/SplitScreen";
 import Learn from "./pages/Learn";
 import ScamAwareness from "./pages/ScamAwareness";
 import Goals from "./pages/Goals";
+import SmellTest from "./pages/SmellTest";
 import "./index.css";
 import SmellTest from "./pages/SmellTest";
 
