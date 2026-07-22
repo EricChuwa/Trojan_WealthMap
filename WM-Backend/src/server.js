@@ -8,6 +8,8 @@ const morgan = require("morgan");
 const budgetRoutes = require("./routes/budgetRoutes");
 const smellTestRoutes = require("./routes/smellTestRoutes");
 const goalRoutes = require("./routes/goalRoutes");
+const flowRoutes = require("./routes/flowRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const authRoutes = require("./routes/authRoutes");
 const fraudRoutes = require("./routes/fraudRoutes");
@@ -25,6 +27,8 @@ app.use("/api/goals", goalRoutes);
 app.use("/api/smell-test", smellTestRoutes);
 app.use("/api/fraud", fraudRoutes);
 app.use("/fraud", fraudRoutes);
+app.use("/api/flow", flowRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
   res.json({
