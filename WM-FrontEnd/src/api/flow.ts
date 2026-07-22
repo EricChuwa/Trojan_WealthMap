@@ -55,7 +55,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(body.message || `Request failed (${res.status})`);
+    throw new Error(body.message || "Request failed");
   }
   return body as T;
 }
@@ -161,4 +161,55 @@ export function shiftMonth(month: string, delta: number): string {
   const [year, m] = month.split("-").map(Number);
   const date = new Date(year, m - 1 + delta, 1);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+// ---- Dashboard ----
+
+export interface DashboardGoal {
+  goal_id: string;
+  name: string;
+  category: string | null;
+  target_amount: number;
+  current_amount: number;
+  pct: number;
+  months_left: number | null;
+  monthly_required: number | null;
+}
+
+export interface DashboardData {
+  success: boolean;
+  month: string;
+  user: {
+    first_name: string;
+    last_name: string;
+    country: string | null;
+    currency: string;
+  } | null;
+  money: {
+    income: number;
+    spent: number;
+    money_in: number;
+    protected: number;
+  };
+  health: {
+    overall_score: number | null;
+    budget_score: number | null;
+    goals_score: number | null;
+    literacy_score: number | null;
+    activity_score: number | null;
+    streak_days: number | null;
+    snapshot_date: string;
+  } | null;
+  goals: DashboardGoal[];
+  investments: {
+    option_id: string;
+    name: string;
+    risk_level: string;
+    min_amount: number | null;
+    expected_return: number | null;
+  }[];
+}
+
+export function getDashboard() {
+  return request<DashboardData>("/dashboard");
 }
