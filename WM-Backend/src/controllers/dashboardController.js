@@ -1,7 +1,10 @@
 const pool = require("../config/db");
 
 // GET /api/dashboard
-
+// One call for the whole dashboard: the user's name, this month's money
+// figures, their latest health score, top goals, and investment options
+// for their country. Anything with no data yet comes back null/empty
+// rather than erroring, so the page renders on a fresh account.
 const getDashboard = async (req, res) => {
   const userId = req.user.id;
   const now = new Date();
@@ -99,7 +102,9 @@ const getDashboard = async (req, res) => {
           }
         : null,
       money: {
-        income: budget ? Number(budget.income) : moneyIn,
+        // fall back to what actually arrived if no payday income was set
+        income:
+          budget && Number(budget.income) > 0 ? Number(budget.income) : moneyIn,
         spent: moneyOut,
         money_in: moneyIn,
         protected: budget ? Number(budget.savings_alloc) : 0,
