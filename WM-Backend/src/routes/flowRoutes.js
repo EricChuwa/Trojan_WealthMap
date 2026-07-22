@@ -9,6 +9,12 @@ const {
   updateItem,
   deleteItem,
 } = require("../controllers/flowController");
+const {
+  ingestSms,
+  simulateSms,
+  getInbox,
+  assignTransaction,
+} = require("../controllers/smsController");
 const authenticateToken = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -23,6 +29,11 @@ router.delete("/groups/:groupId", deleteGroup);
 router.post("/items", createItem);
 router.patch("/items/:itemId", updateItem);
 router.delete("/items/:itemId", deleteItem);
+
+router.post("/sms", ingestSms);
+router.post("/sms/simulate", simulateSms);
+router.get("/inbox", getInbox);
+router.patch("/transactions/:txnId", assignTransaction);
 
 // specific routes first so "/groups" isn't captured by "/:month"
 router.get("/:month/transactions", getTransactions);
