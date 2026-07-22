@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 
 export const investmentOptions = [
   {
+    
     id: "government-bonds",
     level: 1,
     name: "Government Treasury Bonds",
