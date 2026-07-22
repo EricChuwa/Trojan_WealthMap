@@ -14,6 +14,7 @@ import ScamAwareness from "./pages/ScamAwareness";
 import Goals from "./pages/Goals";
 import SmellTest from "./pages/SmellTest";
 import "./index.css";
+import SmellTest from "./pages/SmellTest";
 
 function App() {
   return (
