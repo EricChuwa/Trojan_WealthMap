@@ -131,11 +131,10 @@ CREATE TABLE goals (
   category         VARCHAR(50),
   funded_by        VARCHAR(10) CHECK (funded_by IN ('want', 'saving')),
   target_amount    NUMERIC(14, 2) NOT NULL,
-  current_amount   NUMERIC(14, 2) NOT NULL DEFAULT 0,
   target_date      DATE,
   monthly_required NUMERIC(14, 2),
-  status           VARCHAR(20) NOT NULL DEFAULT 'active'
-                   CHECK (status IN ('active', 'completed', 'abandoned')),
+  saved_amount     NUMERIC(14, 2) NOT NULL DEFAULT 0,
+  status           VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'abandoned')),
   created_at       TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
