@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import {
-  investmentOptions,
-  getInvestedSet,
-  markInvested,
-} from "./InvestmentRoadmap";
+import { investmentOptions, getRiskGradient } from "./InvestmentRoadmap";
 
 function fmtRWF(n: number) {
   return "RWF " + Math.round(n).toLocaleString("en-RW");
@@ -18,9 +14,6 @@ export default function InvestmentDetail() {
 
   const [amount, setAmount] = useState(option?.minEntryValue ?? 0);
   const [toast, setToast] = useState<string | null>(null);
-  const [invested, setInvested] = useState(() =>
-    option ? getInvestedSet().has(option.id) : false,
-  );
 
   if (!option) {
     return (
@@ -35,6 +28,7 @@ export default function InvestmentDetail() {
     );
   }
 
+  const gradient = getRiskGradient(option.riskLabel);
   const projected =
     option.yieldPct != null
       ? fmtRWF(amount * (1 + option.yieldPct / 100))
@@ -43,13 +37,6 @@ export default function InvestmentDetail() {
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 2200);
-  }
-
-  function handleInvest() {
-    markInvested(option!.id);
-    setInvested(true);
-    showToast(`Opening ${option!.platformName}...`);
-    window.open(option!.platformUrl, "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -68,7 +55,7 @@ export default function InvestmentDetail() {
         <div
           className="absolute inset-0"
           style={{
-            background: `radial-gradient(ellipse 100% 90% at 50% 30%, ${option.gradientFrom}CC 0%, ${option.gradientFrom}55 45%, transparent 75%)`,
+            background: `radial-gradient(ellipse 100% 90% at 50% 30%, ${gradient.from}CC 0%, ${gradient.from}55 45%, transparent 75%)`,
           }}
         />
         <div
