@@ -10,6 +10,7 @@ const smellTestRoutes = require("./routes/smellTestRoutes");
 const goalRoutes = require("./routes/goalRoutes");
 const flowRoutes = require("./routes/flowRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const learnRoutes = require("./routes/learnRoutes");
 
 const authRoutes = require("./routes/authRoutes");
 const fraudRoutes = require("./routes/fraudRoutes");
@@ -29,6 +30,7 @@ app.use("/api/fraud", fraudRoutes);
 app.use("/fraud", fraudRoutes);
 app.use("/api/flow", flowRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/learn", learnRoutes);
 
 app.get("/", (req, res) => {
   res.json({
