@@ -1,11 +1,26 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { investmentOptions } from "./InvestmentRoadmap";
+import {
+  investmentOptions,
+  getInvestedSet,
+  markInvested,
+} from "./InvestmentRoadmap";
+
+function fmtRWF(n: number) {
+  return "RWF " + Math.round(n).toLocaleString("en-RW");
+}
 
 export default function InvestmentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const option = investmentOptions.find((o) => o.id === id);
+
+  const [amount, setAmount] = useState(option?.minEntryValue ?? 0);
+  const [toast, setToast] = useState<string | null>(null);
+  const [invested, setInvested] = useState(() =>
+    option ? getInvestedSet().has(option.id) : false,
+  );
 
   if (!option) {
     return (
@@ -20,6 +35,23 @@ export default function InvestmentDetail() {
     );
   }
 
+  const projected =
+    option.yieldPct != null
+      ? fmtRWF(amount * (1 + option.yieldPct / 100))
+      : "Not predictable";
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2200);
+  }
+
+  function handleInvest() {
+    markInvested(option!.id);
+    setInvested(true);
+    showToast(`Opening ${option!.platformName}...`);
+    window.open(option!.platformUrl, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -31,7 +63,7 @@ export default function InvestmentDetail() {
         ← Back
       </button>
 
-      {/* Hero — taller, full-bleed, smoothly fading into the page background */}
+      {/* Full-bleed hero */}
       <div className="relative w-full min-h-[420px] overflow-hidden">
         <div
           className="absolute inset-0"
@@ -39,7 +71,6 @@ export default function InvestmentDetail() {
             background: `radial-gradient(ellipse 100% 90% at 50% 30%, ${option.gradientFrom}CC 0%, ${option.gradientFrom}55 45%, transparent 75%)`,
           }}
         />
-        {/* Fade-to-background overlay, sits on top of the gradient, blends the bottom into the page */}
         <div
           className="absolute inset-0"
           style={{
@@ -51,37 +82,52 @@ export default function InvestmentDetail() {
             {option.name}
           </p>
           <p className="font-mono text-sm text-white/70">
-            {option.riskLabel} · {option.country}
+            Level {option.level} · {option.riskLabel} · {option.country}
           </p>
         </div>
       </div>
 
-      {/* Content below hero — same left margin as hero, cards stretch full width */}
       <div className="px-8 py-8">
         <p className="text-[var(--color-text-secondary)] mb-8 max-w-2xl">
           {option.description}
         </p>
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-[var(--color-card)] rounded-xl p-4">
-            <p className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] mb-1">
-              Minimum
-            </p>
-            <p className="font-mono text-lg">{option.minimum}</p>
+        {/* Calculator */}
+        <div className="bg-[var(--color-card)] rounded-2xl p-6 mb-6 max-w-lg">
+          <label className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] block mb-3">
+            Amount to invest
+          </label>
+          <div className="flex items-center gap-2 mb-5">
+            <span className="font-mono text-[var(--color-text-muted)]">
+              RWF
+            </span>
+            <input
+              type="number"
+              min={option.minEntryValue}
+              step={100}
+              value={amount}
+              onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+              className="flex-1 bg-[var(--color-obsidian)] border border-[var(--color-border)] rounded-lg px-3 py-2 font-mono text-lg focus:border-[var(--color-gold-light)] outline-none"
+            />
           </div>
-          <div className="bg-[var(--color-card)] rounded-xl p-4">
-            <p className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] mb-1">
-              Return
-            </p>
-            <p className="font-mono text-lg" style={{ color: "#2A9D8F" }}>
-              {option.returnText}
-            </p>
+
+          <div className="flex justify-between text-sm py-2 border-t border-[var(--color-border)]">
+            <span className="text-[var(--color-text-muted)]">
+              Minimum entry
+            </span>
+            <span className="font-mono">{option.minimum}</span>
           </div>
-          <div className="bg-[var(--color-card)] rounded-xl p-4">
-            <p className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] mb-1">
-              Access
-            </p>
-            <p className="font-mono text-lg">{option.access}</p>
+          <div className="flex justify-between text-sm py-2 border-t border-[var(--color-border)]">
+            <span className="text-[var(--color-text-muted)]">Est. yield</span>
+            <span className="font-mono">{option.yieldLabel}</span>
+          </div>
+          <div className="flex justify-between text-sm py-2 border-t border-[var(--color-border)]">
+            <span className="text-[var(--color-text-muted)]">
+              Projected in 1 year
+            </span>
+            <span className="font-mono" style={{ color: "#2A9D8F" }}>
+              {projected}
+            </span>
           </div>
         </div>
 
@@ -89,7 +135,8 @@ export default function InvestmentDetail() {
           href={option.platformUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="block text-center py-3 rounded-full bg-gradient-to-r from-[var(--color-gold-light)] to-[var(--color-emerald-light)] text-[var(--color-obsidian)] font-medium mb-2 max-w-md"
+          onClick={() => showToast(`Opening ${option.platformName}...`)}
+          className="block text-center py-3 rounded-full font-medium mb-2 max-w-md bg-gradient-to-r from-[var(--color-gold-light)] to-[var(--color-emerald-light)] text-[var(--color-obsidian)]"
         >
           {option.ctaLabel} →
         </a>
@@ -97,6 +144,12 @@ export default function InvestmentDetail() {
           Opens the official {option.platformName} platform.
         </p>
       </div>
+
+      {toast && (
+        <div className="fixed bottom-7 left-1/2 -translate-x-1/2 bg-[var(--color-card)] border border-[var(--color-border)] px-5 py-3 rounded-xl text-sm z-50">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
