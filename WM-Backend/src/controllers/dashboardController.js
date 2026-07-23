@@ -40,7 +40,7 @@ const getDashboard = async (req, res) => {
           [userId],
         ),
         pool.query(
-          `SELECT goal_id, name, category, target_amount, current_amount,
+          `SELECT goal_id, name, category, target_amount, saved_amount,
                   target_date, monthly_required
              FROM goals
             WHERE user_id = $1 AND status = 'active'
@@ -66,7 +66,7 @@ const getDashboard = async (req, res) => {
 
     const goals = goalsRes.rows.map((g) => {
       const target = Number(g.target_amount);
-      const current = Number(g.current_amount || 0);
+      const current = Number(g.saved_amount || 0);
       const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
 
       let monthsLeft = null;
