@@ -13,7 +13,7 @@ export const investmentOptions = [
     yieldLabel: "~9–13% p.a.",
     yieldPct: 11,
     description:
-      "Fixed-coupon bonds issued by the Government of Rwanda through the National Bank of Rwanda (BNR). One of the safest ways to grow money locally, with returns paid on a fixed schedule and the principal returned at maturity.",
+      "Fixed-coupon bonds issued by the Government of Rwanda, through the National Bank of Rwanda (BNR). One of the safest ways to grow money locally, with returns paid on a fixed schedule and the principal returned at maturity.",
     minimum: "RWF 100,000 (non-competitive bid)",
     returnText: "~9–13%/yr",
     access: "At maturity, or sellable via RSE",
@@ -70,7 +70,7 @@ export const investmentOptions = [
     yieldLabel: "Annual dividend",
     yieldPct: 6,
     description:
-      "Community-based cooperative savings and credit societies present in every sector of Rwanda. Member savings are pooled and grow through cooperative lending, paying an annual dividend.",
+      "Community-based cooperative, savings and credit societies present in every sector of Rwanda. Member savings are pooled and grow through cooperative lending, paying an annual dividend.",
     minimum: "As low as RWF 1,000",
     returnText: "Annual dividend",
     access: "Via your local sector SACCO branch",
