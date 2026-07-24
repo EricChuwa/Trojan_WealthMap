@@ -23,7 +23,7 @@ const mockResult = {
   ],
   relatedQuestions: [
     {
-      q: 'What does a "registered" or "licensed" investment actually mean?',
+      q: 'What does a "registered" or "licensed" investment actually mean in general?',
       a: "It means a real regulator — like Rwanda's Capital Market Authority — has reviewed the operator and holds them accountable. You can usually check a public register online. If an opportunity can't point to one, that's a red flag, not a technicality.",
     },
     {
@@ -31,7 +31,7 @@ const mockResult = {
       a: "All real investments carry risk — returns move with markets. Any offer promising a fixed, high return with no risk is describing something that doesn't exist in legitimate finance. Guarantees like this are one of the most consistent signs of fraud.",
     },
     {
-      q: "Where do I report a scam in Rwanda?",
+      q: "Where do I report a scam, in Rwanda?",
       a: "You can report suspected investment fraud to the Capital Market Authority (CMA) or your local police cybercrime unit. Reporting doesn't just protect you — it can stop the same scheme from reaching others.",
     },
   ],
