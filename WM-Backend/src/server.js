@@ -12,6 +12,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const authRoutes = require("./routes/authRoutes");
 const fraudRoutes = require("./routes/fraudRoutes");
 const authenticateToken = require("./middleware/authMiddleware");
+const investmentRoutes = require("./routes/investmentRoutes");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api/fraud", fraudRoutes);
 app.use("/fraud", fraudRoutes);
 app.use("/api/flow", flowRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/investments", investmentRoutes);
 
 app.get("/", (req, res) => {
   res.json({
