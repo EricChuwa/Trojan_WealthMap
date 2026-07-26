@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { Link, useNavigate } from "react-router-dom";
 import { getDashboard, type DashboardData } from "../api/flow";
+import { SessionExpiredError } from "../api/auth";
 
 function money(n: number): string {
   return n.toLocaleString("en-RW");
@@ -48,10 +49,11 @@ export default function Dashboard() {
     getDashboard()
       .then(setData)
       .catch((err) => {
-        const message =
-          err instanceof Error ? err.message : "Could not load dashboard";
-        setError(message);
-        if (message.toLowerCase().includes("session")) navigate("/login");
+        if (err instanceof SessionExpiredError) {
+          navigate("/login");
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Could not load dashboard");
       })
       .finally(() => setLoading(false));
   }, [navigate]);
