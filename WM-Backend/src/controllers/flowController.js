@@ -84,7 +84,10 @@ const getFlowMonth = async (req, res) => {
 
     const moneyIn = Number(totalsResult.rows[0].money_in);
     const moneyOut = Number(totalsResult.rows[0].money_out);
-    const income = budget ? Number(budget.income) : 0;
+    // If no payday income was set, fall back to what actually arrived,
+    // so "spendable" reflects real money in the account, never negative-by-default.
+    const budgetIncome = budget ? Number(budget.income) : 0;
+    const income = budgetIncome > 0 ? budgetIncome : moneyIn;
     const protectedAmount = budget ? Number(budget.savings_alloc) : 0;
 
     res.status(200).json({
@@ -106,7 +109,7 @@ const getFlowMonth = async (req, res) => {
         net: moneyIn - moneyOut,
         protected: protectedAmount,
         // what's genuinely left to spend once savings is fenced off
-        spendable: income - protectedAmount - moneyOut,
+        spendable: Math.max(0, income - protectedAmount - moneyOut),
       },
       groups: Array.from(groupMap.values()),
     });
