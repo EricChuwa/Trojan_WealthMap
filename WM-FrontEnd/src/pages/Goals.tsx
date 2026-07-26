@@ -79,30 +79,33 @@ function GoalCard({
   );
   const accent = categoryColors[goal.category];
   const bg = categoryBg[goal.category];
-  const isComplete = pct >= 100;
+  const isComplete = goal.status === "completed";
 
   return (
     <div
       className="rounded-2xl p-6 flex flex-col gap-4 transition-all duration-300 hover:brightness-110 relative group"
       style={{ background: bg, border: `1px solid ${accent}33` }}
     >
-      {/* Edit / Delete buttons — fade in on hover */}
+      {/* Edit / Delete buttons — fade in on hover. Edit is hidden once a goal
+          is completed — the backend rejects those edits anyway. */}
       <div
         className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
         style={{ zIndex: 10 }}
       >
-        <button
-          onClick={() => onEdit(goal)}
-          title="Edit goal"
-          className="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110"
-          style={{
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.14)",
-            color: accent,
-          }}
-        >
-          <IconEdit />
-        </button>
+        {!isComplete && (
+          <button
+            onClick={() => onEdit(goal)}
+            title="Edit goal"
+            className="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110"
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              color: accent,
+            }}
+          >
+            <IconEdit />
+          </button>
+        )}
         <button
           onClick={() => onDelete(goal.id)}
           title="Delete goal"
@@ -157,11 +160,28 @@ function GoalCard({
         <span className="font-mono">{fmt(goal.savedAmount)}</span>
         <span className="font-mono">{fmt(goal.targetAmount)}</span>
       </div>
+
+      {/* Monthly savings tip — reveals on hover, collapses to zero height
+          otherwise so it doesn't take up space in the resting card. */}
+      {!isComplete && (
+        <div className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-10">
+          <div
+            className="text-[11px] text-center rounded-lg py-2 px-3"
+            style={{ background: "rgba(255,255,255,0.06)", color: "var(--color-text-muted)" }}
+          >
+            Save{" "}
+            <span style={{ color: accent }} className="font-mono font-semibold">
+              {fmt(goal.monthlyRequired)}
+            </span>
+            /month to reach this goal
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-type FilterKey = "all" | Goal["category"];
+type FilterKey = "all" | Goal["category"] | "completed";
 
 const filters: { label: string; key: FilterKey }[] = [
   { label: "All", key: "all" },
@@ -169,6 +189,7 @@ const filters: { label: string; key: FilterKey }[] = [
   { label: "Purchase", key: "purchase" },
   { label: "Savings", key: "savings" },
   { label: "Investment", key: "investment" },
+  { label: "Completed", key: "completed" },
 ];
 
 export default function Goals() {
@@ -208,14 +229,17 @@ export default function Goals() {
     name: "",
     targetAmount: "",
     savedAmount: "",
-    monthsLeft: "",
     category: "savings" as Goal["category"],
   });
 
   const filtered =
-    activeFilter === "all"
-      ? goals
-      : goals.filter((g) => g.category === activeFilter);
+    activeFilter === "completed"
+      ? goals.filter((g) => g.status === "completed")
+      : goals.filter(
+          (g) =>
+            g.status !== "completed" &&
+            (activeFilter === "all" || g.category === activeFilter),
+        );
 
   const totalTarget = goals.reduce((s, g) => s + g.targetAmount, 0);
   const totalSaved = goals.reduce((s, g) => s + g.savedAmount, 0);
@@ -246,12 +270,12 @@ export default function Goals() {
   }
 
   function openEdit(goal: Goal) {
+    if (goal.status === "completed") return;
     setEditingGoal(goal);
     setEditForm({
       name: goal.name,
       targetAmount: String(goal.targetAmount),
       savedAmount: String(goal.savedAmount),
-      monthsLeft: String(goal.monthsLeft),
       category: goal.category,
     });
   }
@@ -269,10 +293,6 @@ export default function Goals() {
           parseInt(editForm.savedAmount) >= 0
             ? parseInt(editForm.savedAmount)
             : editingGoal.savedAmount,
-        monthsLeft:
-          parseInt(editForm.monthsLeft) > 0
-            ? parseInt(editForm.monthsLeft)
-            : editingGoal.monthsLeft,
         category: editForm.category,
       });
       setGoals((prev) =>
@@ -732,30 +752,6 @@ export default function Goals() {
                   value={editForm.savedAmount}
                   onChange={(e) =>
                     setEditForm((p) => ({ ...p, savedAmount: e.target.value }))
-                  }
-                />
-              </div>
-
-              {/* Months left */}
-              <div>
-                <label
-                  className="block text-xs uppercase tracking-widest mb-1.5"
-                  style={{ color: "var(--color-text-muted)" }}
-                >
-                  Months to reach goal
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  className="w-full rounded-xl px-4 py-3 text-sm font-mono outline-none"
-                  style={{
-                    background: "#0d0d0d",
-                    border: "1px solid var(--color-border)",
-                    color: "var(--color-text-primary)",
-                  }}
-                  value={editForm.monthsLeft}
-                  onChange={(e) =>
-                    setEditForm((p) => ({ ...p, monthsLeft: e.target.value }))
                   }
                 />
               </div>

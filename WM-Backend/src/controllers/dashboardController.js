@@ -68,15 +68,14 @@ const getDashboard = async (req, res) => {
       const target = Number(g.target_amount);
       const current = Number(g.saved_amount || 0);
       const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+      const monthlyRequired = g.monthly_required ? Number(g.monthly_required) : null;
 
-      let monthsLeft = null;
-      if (g.target_date) {
-        const t = new Date(g.target_date);
-        monthsLeft = Math.max(
-          0,
-          (t.getFullYear() - now.getFullYear()) * 12 + (t.getMonth() - now.getMonth()),
-        );
-      }
+      // Same derivation as goalController.js's mapGoal — months left tracks
+      // progress against the pace set at creation, not a calendar diff, so
+      // this matches what the Goals page shows for the same goal.
+      const monthsLeft = monthlyRequired
+        ? Math.max(0, Math.ceil((target - current) / monthlyRequired))
+        : null;
 
       return {
         goal_id: g.goal_id,
@@ -86,7 +85,7 @@ const getDashboard = async (req, res) => {
         current_amount: current,
         pct,
         months_left: monthsLeft,
-        monthly_required: g.monthly_required ? Number(g.monthly_required) : null,
+        monthly_required: monthlyRequired,
       };
     });
 
