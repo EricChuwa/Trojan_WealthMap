@@ -1,61 +1,8 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { AreaChart, Area, XAxis, ResponsiveContainer } from "recharts";
 import Navbar from "../components/Navbar";
-
-const chartData = [
-  { date: "Oct 01", score: 60 },
-  { date: "Oct 08", score: 68 },
-  { date: "Oct 15", score: 74 },
-  { date: "Oct 22", score: 63 },
-  { date: "Oct 29", score: 72 },
-];
-
-const journalEntries = [
-  {
-    date: "Oct 28",
-    text: (
-      <>
-        Completed{" "}
-        <span className="italic text-[var(--color-gold-light)]">
-          "Staying Safe"
-        </span>{" "}
-        lesson — literacy score up 4 points
-      </>
-    ),
-    delta: "+4.8",
-    color: "text-[#2A9D8F]",
-  },
-  {
-    date: "Oct 26",
-    text: "Exceeded monthly dining budget cap by RWF 14,200",
-    delta: "-1.2",
-    color: "text-red-400",
-  },
-  {
-    date: "Oct 22",
-    text: (
-      <>
-        Auto-transfer to <span className="italic">Dream Home Fund</span>{" "}
-        executed
-      </>
-    ),
-    delta: "···",
-    color: "text-[var(--color-text-muted)]",
-  },
-  {
-    date: "Oct 19",
-    text: "Achieved 7-Day Savings Streak. Bonus multiplier applied.",
-    delta: "+2.5",
-    color: "text-[#2A9D8F]",
-  },
-  {
-    date: "Oct 15",
-    text: "Quarterly financial check-up completed. No adjustments needed.",
-    delta: "+0.8",
-    color: "text-[#2A9D8F]",
-  },
-];
+import { getHealthHistory, type HealthHistoryData } from "../api/flow";
 
 function Ring({
   radius,
@@ -97,8 +44,80 @@ function Ring({
   );
 }
 
+function shortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function deltaColor(delta: number | null): string {
+  if (delta === null) return "text-[var(--color-text-muted)]";
+  if (delta > 0) return "text-[#2A9D8F]";
+  if (delta < 0) return "text-red-400";
+  return "text-[var(--color-text-muted)]";
+}
+
+function deltaLabel(delta: number | null): string {
+  if (delta === null) return "···";
+  return delta > 0 ? `+${delta}` : `${delta}`;
+}
+
+const RANGE_MAP = { Week: "week", Month: "month", Year: "year" } as const;
+
 export default function HealthHistory() {
+  const navigate = useNavigate();
   const [range, setRange] = useState<"Week" | "Month" | "Year">("Month");
+  const [data, setData] = useState<HealthHistoryData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    setLoading(true);
+    getHealthHistory(RANGE_MAP[range])
+      .then(setData)
+      .catch((err) => {
+        const message =
+          err instanceof Error ? err.message : "Could not load health history";
+        setError(message);
+        if (message.toLowerCase().includes("session")) navigate("/login");
+      })
+      .finally(() => setLoading(false));
+  }, [range, navigate]);
+
+  const h = data?.latest;
+  const overall = h?.overall_score ?? 0;
+  const budget = h?.budget_score ?? 0;
+  const goals = h?.goals_score ?? 0;
+  const literacy = h?.literacy_score ?? 0;
+  const streak = h?.streak_days ?? 0;
+
+  const chartData =
+    data?.history.map((point) => ({
+      date: shortDate(point.date),
+      score: point.score ?? 0,
+    })) ?? [];
+
+  const breakdown = [
+    {
+      name: "Budget Adherence",
+      sub: "How consistently you stay within your set spending limits.",
+      pct: budget,
+      ring: "#2D7A5F",
+    },
+    {
+      name: "Goal Momentum",
+      sub: "Progress toward your active savings and investment goals.",
+      pct: goals,
+      ring: "#D4A017",
+    },
+    {
+      name: "Literacy Score",
+      sub: "Lessons completed and quizzes passed in Learn.",
+      pct: literacy,
+      ring: "#2A9D8F",
+    },
+  ];
 
   return (
     <div className="min-h-screen">
@@ -124,14 +143,20 @@ export default function HealthHistory() {
           </span>
         </div>
 
+        {error && (
+          <div className="border border-red-500/30 bg-red-500/10 rounded-xl p-4 mb-6">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
+
         {/* Hero: two columns */}
         <div className="grid grid-cols-2 gap-6 mb-10">
           {/* Rings */}
           <div className="bg-[var(--color-card)] rounded-2xl p-8 flex flex-col items-center">
             <svg width="260" height="260" viewBox="0 0 260 260">
-              <Ring radius={115} percent={84} color="#2D7A5F" />
-              <Ring radius={95} percent={62} color="#D4A017" />
-              <Ring radius={75} percent={91} color="#2A9D8F" />
+              <Ring radius={115} percent={budget} color="#2D7A5F" />
+              <Ring radius={95} percent={goals} color="#D4A017" />
+              <Ring radius={75} percent={literacy} color="#2A9D8F" />
               <text
                 x="130"
                 y="122"
@@ -140,7 +165,7 @@ export default function HealthHistory() {
                 fontSize="52"
                 fill="url(#scoreGradient)"
               >
-                72
+                {loading ? "—" : overall}
               </text>
               <text
                 x="130"
@@ -162,19 +187,19 @@ export default function HealthHistory() {
             <div className="grid grid-cols-2 gap-x-10 gap-y-2 mt-4 text-sm">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#2D7A5F]" /> Budget{" "}
-                <span className="font-mono ml-1">84%</span>
+                <span className="font-mono ml-1">{budget}%</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#D4A017]" /> Goals{" "}
-                <span className="font-mono ml-1">62%</span>
+                <span className="font-mono ml-1">{goals}%</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#2A9D8F]" /> Literacy{" "}
-                <span className="font-mono ml-1">91%</span>
+                <span className="font-mono ml-1">{literacy}%</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[var(--color-sapphire)]" />{" "}
-                Streak <span className="font-mono ml-1">14d</span>
+                Streak <span className="font-mono ml-1">{streak}d</span>
               </div>
             </div>
           </div>
@@ -197,44 +222,55 @@ export default function HealthHistory() {
                 ))}
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#D4A017" stopOpacity={0.45} />
-                    <stop offset="100%" stopColor="#D4A017" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="date"
-                  stroke="#9A9A9A"
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Area
-                  type="basis"
-                  dataKey="score"
-                  stroke="#D4A017"
-                  strokeWidth={2.5}
-                  fill="url(#scoreFill)"
-                  dot={{ fill: "#D4A017", r: 4, strokeWidth: 0 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+
+            {chartData.length === 0 ? (
+              <div className="h-[200px] flex items-center justify-center">
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  No score history for this range yet.
+                </p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#D4A017" stopOpacity={0.45} />
+                      <stop offset="100%" stopColor="#D4A017" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="date"
+                    stroke="#9A9A9A"
+                    fontSize={10}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Area
+                    type="basis"
+                    dataKey="score"
+                    stroke="#D4A017"
+                    strokeWidth={2.5}
+                    fill="url(#scoreFill)"
+                    dot={{ fill: "#D4A017", r: 4, strokeWidth: 0 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
 
             <div className="flex gap-10 mt-2">
               <div>
                 <p className="text-xs text-[var(--color-text-muted)]">
-                  Average monthly
+                  Average {range.toLowerCase()}
                 </p>
-                <p className="font-mono text-[var(--color-gold-light)]">68.4</p>
+                <p className="font-mono text-[var(--color-gold-light)]">
+                  {data?.stats.average ?? "—"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-[var(--color-text-muted)]">
                   Top milestone
                 </p>
-                <p className="font-mono">74.2</p>
+                <p className="font-mono">{data?.stats.peak ?? "—"}</p>
               </div>
             </div>
           </div>
@@ -249,29 +285,10 @@ export default function HealthHistory() {
                 Breakdown
               </p>
               <p className="text-xs text-[var(--color-text-muted)]">
-                October 2026
+                {h ? shortDate(h.snapshot_date) : "—"}
               </p>
             </div>
-            {[
-              {
-                name: "Budget Adherence",
-                sub: "You stayed within your set entertainment limits for 3 weeks straight.",
-                pct: "84%",
-                ring: "#2D7A5F",
-              },
-              {
-                name: "Goal Momentum",
-                sub: "Emerald fund is 12% away from the monthly milestone.",
-                pct: "62%",
-                ring: "#D4A017",
-              },
-              {
-                name: "Literacy Score",
-                sub: 'Completed 4 modules in "Market Volatility" this period.',
-                pct: "91%",
-                ring: "#2A9D8F",
-              },
-            ].map((item) => (
+            {breakdown.map((item) => (
               <div
                 key={item.name}
                 className="flex items-center gap-4 py-4 border-b border-[var(--color-border)]"
@@ -300,7 +317,7 @@ export default function HealthHistory() {
                     fill="none"
                     strokeDasharray={2 * Math.PI * 15}
                     strokeDashoffset={
-                      2 * Math.PI * 15 * (1 - parseInt(item.pct) / 100)
+                      2 * Math.PI * 15 * (1 - item.pct / 100)
                     }
                     strokeLinecap="round"
                     transform="rotate(-90 18 18)"
@@ -315,7 +332,7 @@ export default function HealthHistory() {
                   </p>
                 </div>
                 <p className="font-mono" style={{ color: item.ring }}>
-                  {item.pct}
+                  {item.pct}%
                 </p>
               </div>
             ))}
@@ -331,19 +348,27 @@ export default function HealthHistory() {
                 See all entries
               </p>
             </div>
-            {journalEntries.map((entry, i) => (
+
+            {!loading && (data?.journal.length ?? 0) === 0 && (
+              <p className="text-sm text-[var(--color-text-muted)] py-3">
+                No activity recorded yet. Your journal fills in as you use the
+                app.
+              </p>
+            )}
+
+            {data?.journal.map((entry) => (
               <div
-                key={i}
+                key={entry.activity_id}
                 className="flex items-start gap-4 py-3 border-b border-[var(--color-border)] text-sm"
               >
                 <p className="font-mono text-xs text-[var(--color-text-muted)] w-14 pt-0.5">
-                  {entry.date}
+                  {shortDate(entry.date)}
                 </p>
                 <p className="flex-1 text-[var(--color-text-secondary)]">
-                  {entry.text}
+                  {entry.description}
                 </p>
-                <p className={`font-mono text-xs ${entry.color}`}>
-                  {entry.delta}
+                <p className={`font-mono text-xs ${deltaColor(entry.score_delta)}`}>
+                  {deltaLabel(entry.score_delta)}
                 </p>
               </div>
             ))}

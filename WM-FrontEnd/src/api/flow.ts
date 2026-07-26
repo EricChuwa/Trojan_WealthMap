@@ -213,3 +213,36 @@ export interface DashboardData {
 export function getDashboard() {
   return request<DashboardData>("/dashboard");
 }
+
+// ---- Health History ----
+
+export interface HealthSnapshot {
+  overall_score: number | null;
+  budget_score: number | null;
+  goals_score: number | null;
+  literacy_score: number | null;
+  activity_score: number | null;
+  streak_days: number | null;
+  snapshot_date: string;
+}
+
+export interface HealthJournalEntry {
+  activity_id: string;
+  date: string;
+  description: string | null;
+  category: string | null;
+  score_delta: number | null;
+}
+
+export interface HealthHistoryData {
+  success: boolean;
+  range: "week" | "month" | "year";
+  latest: HealthSnapshot | null;
+  history: { date: string; score: number | null }[];
+  stats: { average: number | null; peak: number | null };
+  journal: HealthJournalEntry[];
+}
+
+export function getHealthHistory(range: "week" | "month" | "year" = "month") {
+  return request<HealthHistoryData>(`/health?range=${range}`);
+}
