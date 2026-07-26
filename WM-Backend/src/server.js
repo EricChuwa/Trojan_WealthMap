@@ -11,6 +11,7 @@ const goalRoutes = require("./routes/goalRoutes");
 const flowRoutes = require("./routes/flowRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const learnRoutes = require("./routes/learnRoutes");
+const healthRoutes = require("./routes/healthRoutes");
 
 const authRoutes = require("./routes/authRoutes");
 const fraudRoutes = require("./routes/fraudRoutes");
@@ -31,6 +32,7 @@ app.use("/fraud", fraudRoutes);
 app.use("/api/flow", flowRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/learn", learnRoutes);
+app.use("/api/health", healthRoutes);
 
 app.get("/", (req, res) => {
   res.json({
