@@ -5,6 +5,7 @@ export interface Goal {
   name: string;
   targetAmount: number;
   savedAmount: number;
+  monthlyRequired: number;
   monthsLeft: number;
   category: "savings" | "purchase" | "emergency" | "investment";
   status: "active" | "completed" | "abandoned";
@@ -45,7 +46,6 @@ export async function updateGoal(
     category: Goal["category"];
     targetAmount: number;
     savedAmount: number;
-    monthsLeft: number;
   },
 ): Promise<Goal> {
   const res = await authFetch(`/goals/${id}`, {
