@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
@@ -78,6 +79,82 @@ export const investmentOptions = [
     platformUrl: "https://rca.gov.rw",
     ctaLabel: "Find your sector SACCO",
   },
+  {
+    id: "money-market-fund",
+    level: 1,
+    name: "Money Market Unit Trust",
+    riskLabel: "Very low risk",
+    country: "Rwanda",
+    minEntry: "RWF 10,000",
+    minEntryValue: 10000,
+    yieldLabel: "~9–10% p.a.",
+    yieldPct: 9.5,
+    description:
+      "A pooled fund investing in short-term, low-risk instruments like treasury bills and fixed deposits. Managed by a licensed fund manager, it offers same-week liquidity with steadier returns than a bank savings account.",
+    minimum: "RWF 10,000 initial deposit",
+    returnText: "~9–10%/yr",
+    access: "Redeemable within days, via the fund manager",
+    platformName: "Capital Markets Authority (regulator)",
+    platformUrl: "https://cma.rw",
+    ctaLabel: "Invest now",
+  },
+  {
+    id: "corporate-bonds",
+    level: 2,
+    name: "Corporate & Green Bonds",
+    riskLabel: "Low to medium risk",
+    country: "Rwanda",
+    minEntry: "RWF 50,000",
+    minEntryValue: 50000,
+    yieldLabel: "~11–14% p.a.",
+    yieldPct: 12.5,
+    description:
+      "Fixed-income bonds issued by Rwandan corporations and banks (including green bonds financing sustainable projects), listed on the RSE. Higher yield than government bonds, with credit risk tied to the issuer.",
+    minimum: "RWF 50,000 (varies by issue)",
+    returnText: "~11–14%/yr",
+    access: "At maturity, or sellable via RSE",
+    platformName: "Rwanda Stock Exchange (RSE)",
+    platformUrl: "https://rse.rw",
+    ctaLabel: "Invest now",
+  },
+  {
+    id: "real-estate-reit",
+    level: 3,
+    name: "Real Estate Investment Trusts",
+    riskLabel: "Medium risk",
+    country: "Rwanda",
+    minEntry: "Varies by offering",
+    minEntryValue: 100000,
+    yieldLabel: "Rental yield + growth",
+    yieldPct: null,
+    description:
+      "Pooled vehicles that invest in income-generating property — commercial buildings, housing developments — letting you earn rental-linked returns without buying property outright. Still an emerging asset class in Rwanda.",
+    minimum: "Varies by offering",
+    returnText: "Rental yield + capital growth",
+    access: "Depends on the specific trust or developer",
+    platformName: "Rwanda Stock Exchange (RSE)",
+    platformUrl: "https://rse.rw",
+    ctaLabel: "Learn more",
+  },
+  {
+    id: "diaspora-bonds",
+    level: 1,
+    name: "Diaspora Direct Investment Bonds",
+    riskLabel: "Very low risk",
+    country: "Rwanda",
+    minEntry: "USD 100 equivalent",
+    minEntryValue: 130000,
+    yieldLabel: "~5–7% p.a. (USD)",
+    yieldPct: 6,
+    description:
+      "Dollar-denominated bonds issued by the Government of Rwanda specifically for Rwandans abroad, letting the diaspora invest directly in national development while earning fixed, dollar-based returns.",
+    minimum: "USD 100 (or equivalent)",
+    returnText: "~5–7%/yr (USD)",
+    access: "At maturity, via participating banks",
+    platformName: "National Bank of Rwanda (BNR)",
+    platformUrl: "https://www.bnr.rw",
+    ctaLabel: "Invest now",
+  },
 ];
 
 // Colour is derived from risk level, not hand-assigned — so any number of
@@ -111,7 +188,14 @@ export function getRiskGradient(riskLabel: string) {
   return riskGradients[key] ?? riskGradients["medium"]; // safe fallback for any unrecognised label
 }
 
+// How many cards show before "Load more" — two full rows at 3 columns.
+const PAGE_SIZE = 6;
+
 export default function InvestmentRoadmap() {
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const visibleOptions = investmentOptions.slice(0, visibleCount);
+  const hasMore = visibleCount < investmentOptions.length;
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -123,8 +207,8 @@ export default function InvestmentRoadmap() {
           Ordered from lowest to highest risk.
         </p>
 
-        <div className="grid grid-cols-2 gap-6">
-          {investmentOptions.map((opt) => {
+        <div className="grid grid-cols-3 gap-6">
+          {visibleOptions.map((opt) => {
             const gradient = getRiskGradient(opt.riskLabel);
             return (
               <Link
@@ -160,6 +244,20 @@ export default function InvestmentRoadmap() {
             );
           })}
         </div>
+
+        {hasMore && (
+          <div className="flex flex-col items-center gap-2 mt-8">
+            <button
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="px-6 py-2.5 rounded-full border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] hover:border-[var(--color-gold-light)] hover:text-[var(--color-gold-light)] transition-colors"
+            >
+              Load more
+            </button>
+            <p className="text-xs text-[var(--color-text-muted)]">
+              Showing {visibleOptions.length} of {investmentOptions.length}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
