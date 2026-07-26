@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AreaChart, Area, XAxis, ResponsiveContainer } from "recharts";
 import Navbar from "../components/Navbar";
 import { getHealthHistory, type HealthHistoryData } from "../api/flow";
+import { SessionExpiredError } from "../api/auth";
 
 function Ring({
   radius,
@@ -77,10 +78,11 @@ export default function HealthHistory() {
     getHealthHistory(RANGE_MAP[range])
       .then(setData)
       .catch((err) => {
-        const message =
-          err instanceof Error ? err.message : "Could not load health history";
-        setError(message);
-        if (message.toLowerCase().includes("session")) navigate("/login");
+        if (err instanceof SessionExpiredError) {
+          navigate("/login");
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Could not load health history");
       })
       .finally(() => setLoading(false));
   }, [range, navigate]);

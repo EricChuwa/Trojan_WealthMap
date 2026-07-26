@@ -13,6 +13,7 @@ import {
   type ResumeTarget,
   type Skill,
 } from "../api/learn";
+import { SessionExpiredError } from "../api/auth";
 
 import img1 from "../assets/img-1.jpg";
 import img2 from "../assets/img2.avif";
@@ -161,7 +162,13 @@ export default function Learn() {
         setStreakDays(dashboard.health?.streak_days ?? null);
         setLiteracyScore(dashboard.health?.literacy_score ?? null);
       })
-      .catch((err: Error) => setLoadError(err.message))
+      .catch((err: Error) => {
+        if (err instanceof SessionExpiredError) {
+          navigate("/login");
+          return;
+        }
+        setLoadError(err.message);
+      })
       .finally(() => setLoading(false));
   }
 

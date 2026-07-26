@@ -14,6 +14,17 @@ export function isAuthenticated(): boolean {
   return getToken() !== null;
 }
 
+// A distinct, checkable class rather than string-matching an error message —
+// every place that hits a 401 (authFetch here, and api/flow.ts's own request
+// helper) throws this same class so pages can reliably detect "redirect to
+// login" instead of guessing from message text.
+export class SessionExpiredError extends Error {
+  constructor() {
+    super("Your session expired. Please sign in again.");
+    this.name = "SessionExpiredError";
+  }
+}
+
 export async function registerUser(data: {
   first_name: string;
   last_name: string;
@@ -65,7 +76,7 @@ export async function authFetch(path: string, options: RequestInit = {}) {
   });
   if (res.status === 401) {
     clearToken();
-    throw new Error("Your session expired. Please sign in again.");
+    throw new SessionExpiredError();
   }
   return res;
 }

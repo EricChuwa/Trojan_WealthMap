@@ -1,4 +1,4 @@
-import { getToken } from "./auth";
+import { getToken, clearToken, SessionExpiredError } from "./auth";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -52,6 +52,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       ...options.headers,
     },
   });
+
+  if (res.status === 401) {
+    clearToken();
+    throw new SessionExpiredError();
+  }
 
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {

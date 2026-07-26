@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import {
   fetchGoals,
@@ -7,6 +8,7 @@ import {
   deleteGoal,
   type Goal,
 } from "../api/goals";
+import { SessionExpiredError } from "../api/auth";
 
 const categoryColors: Record<Goal["category"], string> = {
   emergency: "var(--color-gold-light)",
@@ -193,6 +195,7 @@ const filters: { label: string; key: FilterKey }[] = [
 ];
 
 export default function Goals() {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
   const [showModal, setShowModal] = useState(false);
   const [newGoal, setNewGoal] = useState({
@@ -209,7 +212,13 @@ export default function Goals() {
   function refreshGoals() {
     return fetchGoals()
       .then(setGoals)
-      .catch((err: Error) => setLoadError(err.message))
+      .catch((err: Error) => {
+        if (err instanceof SessionExpiredError) {
+          navigate("/login");
+          return;
+        }
+        setLoadError(err.message);
+      })
       .finally(() => setLoading(false));
   }
 

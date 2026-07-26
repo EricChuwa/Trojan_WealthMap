@@ -1,4 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { logout } from "../api/auth";
 
 const links = [
   { label: "Home", path: "/dashboard" },
@@ -10,6 +11,13 @@ const links = [
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate("/login");
+  }
+
   return (
     <nav className="flex items-center justify-between px-8 py-5 border-b border-[var(--color-border)]">
       <Link
@@ -78,6 +86,28 @@ export default function Navbar() {
         <div className="w-8 h-8 rounded-full bg-[var(--color-sapphire)] flex items-center justify-center text-xs font-medium">
           RC
         </div>
+
+        <button
+          onClick={handleLogout}
+          title="Log out"
+          aria-label="Log out"
+          className="w-8 h-8 rounded-full border border-[var(--color-border)] flex items-center justify-center hover:border-[var(--color-gold-light)] transition-colors"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--color-text-muted)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </button>
       </div>
     </nav>
   );
