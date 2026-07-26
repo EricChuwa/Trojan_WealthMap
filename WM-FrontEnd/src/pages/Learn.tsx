@@ -14,18 +14,18 @@ import {
   type Skill,
 } from "../api/learn";
 
-import architectureWealthImg from "../assets/architecture_of_wealth.png";
-import psychologyMoneyImg from "../assets/psychology_of_money.png";
-import strategicSavingImg from "../assets/strategic_saving.png";
-import indexFundsImg from "../assets/index_funds.png";
+import img1 from "../assets/img-1.jpg";
+import img2 from "../assets/img2.avif";
+import img3 from "../assets/img-3.jpeg";
+import pexels4 from "../assets/pexels-rdne-8370776.jpg";
 
 // The backend stores image_url per course (null for our seeded content) —
 // map by title to keep the existing art direction without image hosting yet.
 const COURSE_IMAGES: Record<string, string> = {
-  "The Architecture of Wealth": architectureWealthImg,
-  "The Psychology of Money": psychologyMoneyImg,
-  "Strategic Saving": strategicSavingImg,
-  "Index Funds & ETFs": indexFundsImg,
+  "The Architecture of Wealth": img2,
+  "The Psychology of Money": img3,
+  "Strategic Saving": img1,
+  "Index Funds & ETFs": pexels4,
 };
 
 function formatDuration(minutes: number | null): string {
@@ -65,11 +65,10 @@ function SkillCircle({
   return (
     <div
       onClick={onClick}
-      className={`bg-card border ${
-        isSelected
+      className={`bg-card border ${isSelected
           ? "border-[var(--color-gold-light)] ring-2 ring-[var(--color-gold-light)]/20 bg-card/90"
           : "border-border/80 hover:border-gold-light/40"
-      } rounded-2xl p-4 md:p-5 flex flex-col items-center justify-center text-center w-full aspect-square transition-all duration-300 hover:shadow-xl cursor-pointer select-none group relative overflow-hidden`}
+        } rounded-2xl p-4 md:p-5 flex flex-col items-center justify-center text-center w-full aspect-square transition-all duration-300 hover:shadow-xl cursor-pointer select-none group relative overflow-hidden`}
     >
       {isLocked ? (
         <div className="w-14 h-14 rounded-full bg-obsidian border border-border flex items-center justify-center text-lg text-text-muted mb-3 group-hover:scale-105 transition-transform">
@@ -107,13 +106,12 @@ function SkillCircle({
       )}
       <p className="text-xs md:text-sm font-semibold text-text-primary mb-1 line-clamp-1">{label}</p>
       <span
-        className={`text-[10px] md:text-xs font-medium px-2 py-0.5 rounded-full ${
-          isLocked
+        className={`text-[10px] md:text-xs font-medium px-2 py-0.5 rounded-full ${isLocked
             ? "bg-obsidian text-text-muted"
             : percent === 100
-            ? "bg-[var(--color-gold)]/15 text-[var(--color-gold-light)] border border-[var(--color-gold)]/30"
-            : "bg-[var(--color-emerald-light)]/15 text-[var(--color-emerald-light)] border border-[var(--color-emerald-light)]/30"
-        }`}
+              ? "bg-[var(--color-gold)]/15 text-[var(--color-gold-light)] border border-[var(--color-gold)]/30"
+              : "bg-[var(--color-emerald-light)]/15 text-[var(--color-emerald-light)] border border-[var(--color-emerald-light)]/30"
+          }`}
       >
         {status}
       </span>
@@ -343,7 +341,7 @@ export default function Learn() {
 
                 <div className="relative rounded-2xl overflow-hidden min-h-[280px] md:min-h-[300px] flex items-center p-6 md:p-10 border border-border group transition-all duration-300 hover:border-gold-light/30 shadow-2xl">
                   <img
-                    src={COURSE_IMAGES[featuredCourse.title] || architectureWealthImg}
+                    src={COURSE_IMAGES[featuredCourse.title] || img1}
                     alt={featuredCourse.title}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
@@ -407,21 +405,19 @@ export default function Learn() {
             <div className="flex gap-1 bg-card border border-border/80 rounded-xl p-1 mb-8 w-fit">
               <button
                 onClick={() => setPageTab("courses")}
-                className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                  pageTab === "courses"
+                className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${pageTab === "courses"
                     ? "bg-[var(--color-gold-light)] text-obsidian shadow-sm"
                     : "text-text-muted hover:text-white"
-                }`}
+                  }`}
               >
                 Courses
               </button>
               <button
                 onClick={() => setPageTab("progress")}
-                className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                  pageTab === "progress"
+                className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${pageTab === "progress"
                     ? "bg-[var(--color-gold-light)] text-obsidian shadow-sm"
                     : "text-text-muted hover:text-white"
-                }`}
+                  }`}
               >
                 My Progress
               </button>
@@ -448,11 +444,10 @@ export default function Learn() {
                           setSelectedCategory(cat);
                           setActiveSkillFilter(null);
                         }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                          selectedCategory === cat
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedCategory === cat
                             ? "bg-[var(--color-gold-light)] text-obsidian font-semibold shadow-sm"
                             : "text-text-muted hover:text-white hover:bg-obsidian/50"
-                        }`}
+                          }`}
                       >
                         {cat}
                       </button>
@@ -519,11 +514,10 @@ export default function Learn() {
                     <div
                       key={course.id}
                       onClick={() => !course.isLocked && handleOpenCourse(course)}
-                      className={`bg-card border rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 group ${
-                        course.isLocked
+                      className={`bg-card border rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 group ${course.isLocked
                           ? "border-border/20 cursor-default grayscale opacity-50 saturate-0"
                           : "border-border/80 hover:border-gold-light/30 hover:shadow-lg cursor-pointer"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-start gap-4 mb-4">
                         {COURSE_IMAGES[course.title] ? (
@@ -571,11 +565,10 @@ export default function Learn() {
                           <div className="flex items-center gap-2">
                             <div className="h-1.5 bg-border rounded-full overflow-hidden w-20">
                               <div
-                                className={`h-full rounded-full ${
-                                  course.progress === 100
+                                className={`h-full rounded-full ${course.progress === 100
                                     ? "bg-[var(--color-gold)]"
                                     : "bg-[var(--color-emerald-light)]"
-                                }`}
+                                  }`}
                                 style={{ width: `${course.progress}%` }}
                               />
                             </div>
@@ -619,10 +612,10 @@ export default function Learn() {
                       const status = skill.isLocked
                         ? "Locked"
                         : skill.percent === 100
-                        ? "Mastered"
-                        : skill.percent > 0
-                        ? "In Progress"
-                        : "Started";
+                          ? "Mastered"
+                          : skill.percent > 0
+                            ? "In Progress"
+                            : "Started";
                       return (
                         <SkillCircle
                           key={skill.id}
@@ -676,22 +669,20 @@ export default function Learn() {
                               {course.completedLessons} / {course.totalLessons} lessons
                             </span>
                             <span
-                              className={`font-semibold ${
-                                course.progress === 100
+                              className={`font-semibold ${course.progress === 100
                                   ? "text-[var(--color-gold-light)]"
                                   : "text-[var(--color-emerald-light)]"
-                              }`}
+                                }`}
                             >
                               {course.progress}%
                             </span>
                           </div>
                           <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-500 ${
-                                course.progress === 100
+                              className={`h-full rounded-full transition-all duration-500 ${course.progress === 100
                                   ? "bg-[var(--color-gold)]"
                                   : "bg-[var(--color-emerald-light)]"
-                              }`}
+                                }`}
                               style={{ width: `${course.progress}%` }}
                             />
                           </div>
@@ -701,8 +692,8 @@ export default function Learn() {
                           {course.progress === 100
                             ? "Completed — click to review"
                             : course.progress === 0
-                            ? "Not started yet"
-                            : "In progress — click to continue"}
+                              ? "Not started yet"
+                              : "In progress — click to continue"}
                         </p>
                       </div>
                     ))}
@@ -751,22 +742,20 @@ export default function Learn() {
                 <div className="flex border-b border-border/80 px-6 bg-obsidian/20">
                   <button
                     onClick={() => setModalTab("outline")}
-                    className={`py-3 px-4 text-xs font-semibold border-b-2 transition-colors ${
-                      modalTab === "outline"
+                    className={`py-3 px-4 text-xs font-semibold border-b-2 transition-colors ${modalTab === "outline"
                         ? "border-[var(--color-gold-light)] text-[var(--color-gold-light)]"
                         : "border-transparent text-text-muted hover:text-white"
-                    }`}
+                      }`}
                   >
                     Course Syllabus ({activeCourseModal.lessons.length})
                   </button>
                   {activeCourseModal.quiz.length > 0 && (
                     <button
                       onClick={() => setModalTab("quiz")}
-                      className={`py-3 px-4 text-xs font-semibold border-b-2 transition-colors ${
-                        modalTab === "quiz"
+                      className={`py-3 px-4 text-xs font-semibold border-b-2 transition-colors ${modalTab === "quiz"
                           ? "border-[var(--color-gold-light)] text-[var(--color-gold-light)]"
                           : "border-transparent text-text-muted hover:text-white"
-                      }`}
+                        }`}
                     >
                       Knowledge Check Quiz
                     </button>
@@ -779,30 +768,27 @@ export default function Learn() {
                       {activeCourseModal.lessons.map((lesson, idx) => (
                         <div
                           key={lesson.id}
-                          className={`p-4 rounded-xl border transition-all ${
-                            lesson.status === "completed"
+                          className={`p-4 rounded-xl border transition-all ${lesson.status === "completed"
                               ? "bg-emerald-950/10 border-emerald-900/30"
                               : "bg-obsidian/60 border-border/60"
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-3">
                               <button
                                 onClick={() => handleToggleLesson(lesson.id)}
-                                className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs cursor-pointer transition-colors ${
-                                  lesson.status === "completed"
+                                className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs cursor-pointer transition-colors ${lesson.status === "completed"
                                     ? "bg-emerald-500 border-emerald-400 text-obsidian font-bold"
                                     : "border-border text-transparent hover:border-gold-light"
-                                }`}
+                                  }`}
                               >
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
                               </button>
                               <h4
-                                className={`text-sm font-semibold ${
-                                  lesson.status === "completed"
+                                className={`text-sm font-semibold ${lesson.status === "completed"
                                     ? "text-white line-through opacity-80"
                                     : "text-text-primary"
-                                }`}
+                                  }`}
                               >
                                 {idx + 1}. {lesson.title}
                               </h4>
