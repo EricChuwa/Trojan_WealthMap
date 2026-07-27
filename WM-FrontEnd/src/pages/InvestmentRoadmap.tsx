@@ -207,13 +207,15 @@ export default function InvestmentRoadmap() {
           Ordered from lowest to highest risk.
         </p>
 
-        <div className="grid grid-cols-3 gap-6">
-          {visibleOptions.map((opt) => {
-            const gradient = getRiskGradient(opt.riskLabel);
+        {loading && <p className="text-sm text-[var(--color-text-muted)]">Loading...</p>}
+        {error && <p className="text-sm text-red-400">{error}</p>}
+
+        <div className="grid grid-cols-2 gap-6">
+          {options.map((opt) => {
+            const gradient = RISK_GRADIENTS[opt.risk_level] ?? RISK_GRADIENTS.medium;
             return (
-              <Link
-                key={opt.id}
-                to={`/invest/${opt.id}`}
+              <div
+                key={opt.option_id}
                 className="rounded-2xl p-7 relative overflow-hidden min-h-[220px] flex flex-col justify-between"
                 style={{
                   background: `linear-gradient(135deg, #000000 0%, ${gradient.from}66 100%)`,
@@ -228,36 +230,19 @@ export default function InvestmentRoadmap() {
                   </p>
                   <div className="flex justify-between text-xs pb-3 mb-3 border-b border-white/10">
                     <span className="text-white/60">Min. Entry</span>
-                    <span className="font-mono text-white">{opt.minEntry}</span>
+                    <span className="font-mono text-white">{fmtRWF(opt.min_amount)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-white/60">Est. Yield</span>
-                    <span
-                      className="font-mono"
-                      style={{ color: gradient.textColor }}
-                    >
-                      {opt.yieldLabel}
+                    <span className="font-mono" style={{ color: gradient.textColor }}>
+                      {opt.expected_return}% p.a.
                     </span>
                   </div>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
-
-        {hasMore && (
-          <div className="flex flex-col items-center gap-2 mt-8">
-            <button
-              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-              className="px-6 py-2.5 rounded-full border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] hover:border-[var(--color-gold-light)] hover:text-[var(--color-gold-light)] transition-colors"
-            >
-              Load more
-            </button>
-            <p className="text-xs text-[var(--color-text-muted)]">
-              Showing {visibleOptions.length} of {investmentOptions.length}
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

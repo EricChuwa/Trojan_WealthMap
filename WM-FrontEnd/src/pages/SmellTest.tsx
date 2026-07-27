@@ -1,183 +1,336 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 
-type Verdict = "red" | "amber" | "green";
+const API_URL = import.meta.env.VITE_API_URL;
 
-const verdictStyles: Record<
-  Verdict,
-  { label: string; color: string; gradient: string }
+interface SmellTestResult {
+  risk: "GREEN" | "AMBER" | "RED";
+  summary: string;
+  questions: string[];
+}
+
+async function analyzeSmellTest(text: string): Promise<SmellTestResult> {
+  const res = await fetch(`${API_URL}/smell-test`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Analysis failed");
+  }
+  const data = await res.json();
+  return data as SmellTestResult;
+}
+
+const RISK_META: Record<
+  SmellTestResult["risk"],
+  { className: string; icon: JSX.Element }
 > = {
-  red: { label: "RED", color: "#f87171", gradient: "#8B1A1A" },
-  amber: { label: "AMBER", color: "#D4A017", gradient: "#8A5A0A" },
-  green: { label: "GREEN", color: "#2A9D8F", gradient: "#1B4D3E" },
-};
-
-const mockResult = {
-  verdict: "red" as Verdict,
-  explanation:
-    'This opportunity exhibits severe hallmarks of financial fraud. Promises of "guaranteed" high returns over short periods are mathematically unsustainable. Furthermore, artificial urgency ("limited spots") is a classic psychological tactic designed to bypass critical thinking.',
-  questions: [
-    "Can they provide verifiable, audited third-party track records?",
-    "What is the exact mechanism generating these outsized returns?",
-    "Is the liquidity pool registered with any financial regulatory authority?",
-  ],
-  relatedQuestions: [
-    {
-      q: 'What does a "registered" or "licensed" investment actually mean in general?',
-      a: "It means a real regulator — like Rwanda's Capital Market Authority — has reviewed the operator and holds them accountable. You can usually check a public register online. If an opportunity can't point to one, that's a red flag, not a technicality.",
-    },
-    {
-      q: 'Why can\'t high returns be "guaranteed"?',
-      a: "All real investments carry risk — returns move with markets. Any offer promising a fixed, high return with no risk is describing something that doesn't exist in legitimate finance. Guarantees like this are one of the most consistent signs of fraud.",
-    },
-    {
-      q: "Where do I report a scam, in Rwanda?",
-      a: "You can report suspected investment fraud to the Capital Market Authority (CMA) or your local police cybercrime unit. Reporting doesn't just protect you — it can stop the same scheme from reaching others.",
-    },
-  ],
+  RED: {
+    className: "",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ marginTop: 2 }}>
+        <path d="M12 3.5L21.5 20h-19L12 3.5z" />
+        <path d="M12 10v4" />
+        <path d="M12 17h.01" />
+      </svg>
+    ),
+  },
+  AMBER: {
+    className: "caution",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ marginTop: 2 }}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 8v5" />
+        <path d="M12 16h.01" />
+      </svg>
+    ),
+  },
+  GREEN: {
+    className: "ok",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ marginTop: 2 }}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M8.5 12.5l2.5 2.5 5-5" />
+      </svg>
+    ),
+  },
 };
 
 export default function SmellTest() {
-  const [input, setInput] = useState("");
-  const [result, setResult] = useState<typeof mockResult | null>(null);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [input, setInput] = useState(
+    "Guaranteed 20% weekly returns on crypto arbitrage via a new decentralized liquidity pool. Act fast, limited spots."
+  );
+  const [result, setResult] = useState<SmellTestResult | null>(null);
+  const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleAnalyze() {
-    setResult(mockResult);
+  const [followUpQ, setFollowUpQ] = useState("");
+  const [followUpA, setFollowUpA] = useState<string | null>(null);
+  const [followUpLoading, setFollowUpLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const text = input.trim();
+    if (!text || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await analyzeSmellTest(text);
+      setResult(res);
+      requestAnimationFrame(() => setShow(true));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const v = result ? verdictStyles[result.verdict] : null;
+  async function handleFollowUp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!followUpQ.trim() || !result || followUpLoading) return;
+    setFollowUpLoading(true);
+    setFollowUpA(null);
+    try {
+      const res = await fetch(`${API_URL}/smell-test/follow-up`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          originalText: input,
+          riskLevel: result.risk,
+          summary: result.summary,
+          question: followUpQ,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setFollowUpA(data.answer);
+      } else {
+        setFollowUpA("Sorry, couldn't get an answer. Try again.");
+      }
+    } catch {
+      setFollowUpA("Sorry, couldn't get an answer. Try again.");
+    } finally {
+      setFollowUpLoading(false);
+    }
+  }
+
+  function handleAgain() {
+    setShow(false);
+    setTimeout(() => {
+      setResult(null);
+      setInput("");
+      setFollowUpQ("");
+      setFollowUpA(null);
+    }, 350);
+  }
+
+  const meta = result ? RISK_META[result.risk] : null;
 
   return (
-    <div className="min-h-screen">
+    <div className="smell-test-page">
+      <style>{`
+        .smell-test-page {
+          --bg: #0a0a0b;
+          --card-bg: #17171a;
+          --border: rgba(255,255,255,0.08);
+          --border-strong: rgba(255,255,255,0.14);
+          --text: #f2efec;
+          --text-dim: #a9a6a1;
+          --text-dimmer: #77746f;
+          --accent: #d99a63;
+          --accent-soft: rgba(217,154,99,0.12);
+          --danger: #e2897c;
+          --ok: #8fbf9f;
+          --line-blue: #5b93ef;
+          --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+          background: var(--bg);
+          color: var(--text);
+          font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+          min-height: 100vh;
+          -webkit-font-smoothing: antialiased;
+        }
+        .smell-test-page .topline {
+          height: 2px; width: 100%;
+          background: linear-gradient(90deg, transparent 0%, var(--line-blue) 50%, transparent 100%);
+        }
+        .smell-test-page main {
+          display: flex; justify-content: center;
+          padding: 64px 24px 90px;
+        }
+        .smell-test-page .wrap { width: 100%; max-width: 560px; }
+        .smell-test-page h1 {
+          font-family: var(--serif); font-weight: 400; font-size: 2.1rem;
+          margin: 0 0 14px; text-wrap: balance;
+        }
+        .smell-test-page .lede {
+          color: var(--text-dim); font-size: 0.98rem; line-height: 1.55;
+          margin: 0 0 40px; max-width: 46ch;
+        }
+        .smell-test-page form.paste {
+          display: flex; align-items: flex-end; gap: 14px;
+          border-bottom: 1px solid var(--border-strong);
+          padding-bottom: 14px; margin-bottom: 48px;
+        }
+        .smell-test-page .paste textarea {
+          flex: 1; background: none; border: none; color: var(--text);
+          font-family: inherit; font-size: 0.98rem; line-height: 1.5;
+          resize: none; outline: none; min-height: 24px; max-height: 160px; overflow-y: auto;
+        }
+        .smell-test-page .paste textarea::placeholder { color: var(--text-dimmer); }
+        .smell-test-page .send-btn {
+          background: none; border: none; color: var(--accent); cursor: pointer;
+          padding: 4px; display: flex; align-items: center;
+          transition: transform 0.15s ease, opacity 0.15s ease; flex-shrink: 0;
+        }
+        .smell-test-page .send-btn:hover { transform: translateX(2px); }
+        .smell-test-page .send-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+        .smell-test-page .card {
+          background: var(--card-bg); border: 1px solid var(--border);
+          border-radius: 14px; padding: 44px 40px 36px; text-align: center;
+          opacity: 0; transform: translateY(6px);
+          transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        .smell-test-page .card.show { opacity: 1; transform: translateY(0); }
+        .smell-test-page .verdict-label {
+          font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+          color: var(--accent); margin-bottom: 14px;
+        }
+        .smell-test-page .verdict {
+          font-family: var(--serif); font-size: 3rem; line-height: 1;
+          margin: 0 0 22px; color: var(--danger);
+        }
+        .smell-test-page .verdict.ok { color: var(--ok); }
+        .smell-test-page .verdict.caution { color: var(--accent); }
+        .smell-test-page .summary {
+          color: var(--text-dim); font-size: 0.94rem; line-height: 1.65;
+          max-width: 40ch; margin: 0 auto 30px;
+        }
+        .smell-test-page .investigate {
+          text-align: left; padding-top: 22px; border-top: 1px solid var(--border);
+        }
+        .smell-test-page .investigate h2 {
+          font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+          color: var(--text-dim); margin: 0 0 16px;
+        }
+        .smell-test-page .investigate ul {
+          list-style: none; margin: 0 0 30px; padding: 0;
+          display: flex; flex-direction: column; gap: 12px;
+        }
+        .smell-test-page .investigate li {
+          display: flex; gap: 10px; align-items: flex-start;
+          color: var(--text-dim); font-size: 0.9rem; line-height: 1.5;
+        }
+        .smell-test-page .investigate svg { flex-shrink: 0; color: var(--danger); }
+        .smell-test-page .investigate.ok svg { color: var(--ok); }
+        .smell-test-page .investigate.caution svg { color: var(--accent); }
+        .smell-test-page .again-btn {
+          background: none; border: 1px solid var(--border-strong); color: var(--text);
+          font-family: inherit; font-size: 0.88rem; padding: 10px 22px; border-radius: 999px;
+          display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+          transition: border-color 0.15s ease, background 0.15s ease;
+        }
+        .smell-test-page .again-btn:hover { border-color: var(--text-dim); background: rgba(255,255,255,0.03); }
+        .smell-test-page .error-msg { color: var(--danger); font-size: 0.9rem; margin-bottom: 24px; }
+        .smell-test-page .followup-form {
+          display: flex; gap: 8px; margin-bottom: 20px;
+        }
+        .smell-test-page .followup-form input {
+          flex: 1; background: var(--bg); border: 1px solid var(--border-strong);
+          border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 0.88rem;
+          font-family: inherit;
+        }
+        .smell-test-page .followup-form button {
+          background: var(--accent); color: #231a0c; border: none; border-radius: 8px;
+          padding: 8px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+        }
+        .smell-test-page .followup-form button:disabled { opacity: 0.5; cursor: default; }
+        .smell-test-page .followup-answer {
+          color: var(--text-dim); font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px;
+        }
+        @media (max-width: 560px) {
+          .smell-test-page main { padding: 44px 16px 60px; }
+          .smell-test-page .card { padding: 34px 22px 28px; }
+          .smell-test-page .verdict { font-size: 2.4rem; }
+        }
+      `}</style>
+
+      <div className="topline"></div>
       <Navbar />
 
-      {!result && (
-        <div className="min-h-[70vh] flex flex-col items-center justify-center px-8">
-          <div className="max-w-xl w-full text-center">
-            <p className="font-[family-name:var(--font-display)] text-3xl mb-2">
-              Paste the opportunity
-            </p>
-            <p className="text-sm text-[var(--color-text-muted)] mb-8">
-              A message, a screenshot's text, a pitch someone sent you — paste
-              it below.
-            </p>
-            <div className="flex items-end gap-3 border-b border-[var(--color-border)] focus-within:border-[var(--color-gold-light)] pb-3 transition-colors text-left">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                rows={2}
-                placeholder="Guaranteed 20% weekly returns on crypto arbitrage via a new decentralized liquidity pool. Act fast, limited spots."
-                className="flex-1 bg-transparent outline-none resize-none text-sm placeholder:text-[var(--color-text-muted)]/60"
-              />
-              <button
-                onClick={handleAnalyze}
-                className="text-[var(--color-gold-light)] pb-1"
-                aria-label="Analyze"
-              >
-                ➤
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <main>
+        <div className="wrap">
+          <h1>Paste the opportunity</h1>
+          <p className="lede">
+            Drop in the message, DM, or listing verbatim. We'll flag the manipulation patterns before your money does.
+          </p>
 
-      {result && v && (
-        <>
-          {/* Full-bleed verdict hero — starts immediately below the nav, no gap */}
-          <div className="relative w-full min-h-[380px] overflow-hidden">
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `radial-gradient(ellipse 100% 90% at 50% 40%, ${v.gradient}99 0%, ${v.gradient}33 45%, transparent 75%)`,
+          <form className="paste" onSubmit={handleSubmit}>
+            <textarea
+              rows={1}
+              placeholder="Paste the pitch, offer, or message here…"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
               }}
             />
-            <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-8 min-h-[380px]">
-              <p className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] mb-4">
-                Risk assessment
-              </p>
-              <p
-                className="font-[family-name:var(--font-display)] text-8xl mb-6"
-                style={{ color: v.color }}
-              >
-                {v.label}
-              </p>
-              <p className="text-[var(--color-text-secondary)] max-w-xl">
-                {result.explanation}
-              </p>
-            </div>
-          </div>
-
-          {/* Investigate further */}
-          <div className="px-8 py-10 max-w-2xl">
-            <p className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] mb-5">
-              Investigate further
-            </p>
-            <div className="space-y-4 mb-10">
-              {result.questions.map((q) => (
-                <div
-                  key={q}
-                  className="flex items-start gap-3 pb-4 border-b border-[var(--color-border)]"
-                >
-                  <span className="mt-0.5" style={{ color: v.color }}>
-                    ⚠
-                  </span>
-                  <p className="text-sm text-[var(--color-text-secondary)]">
-                    {q}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Related questions — Google-style expandable FAQ */}
-            <p className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] mb-5">
-              People also ask
-            </p>
-            <div className="space-y-0 mb-10">
-              {result.relatedQuestions.map((item, i) => (
-                <div
-                  key={item.q}
-                  className="border-b border-[var(--color-border)]"
-                >
-                  <button
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between py-4 text-left"
-                  >
-                    <span className="text-sm text-[var(--color-text-primary)] pr-4">
-                      {item.q}
-                    </span>
-                    <span
-                      className="text-[var(--color-text-muted)] transition-transform flex-shrink-0"
-                      style={{
-                        transform:
-                          openFaq === i ? "rotate(180deg)" : "rotate(0deg)",
-                      }}
-                    >
-                      ⌄
-                    </span>
-                  </button>
-                  {openFaq === i && (
-                    <p className="text-sm text-[var(--color-text-secondary)] pb-4 pr-8">
-                      {item.a}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => {
-                setResult(null);
-                setInput("");
-                setOpenFaq(null);
-              }}
-              className="px-6 py-2.5 rounded-full border border-[var(--color-border)] text-sm flex items-center gap-2"
-            >
-              ↻ Analyze another
+            <button type="submit" className="send-btn" disabled={loading || !input.trim()} aria-label="Analyze">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 11.5L20.5 4l-6.8 17-3.1-7.6L3 11.5z" />
+              </svg>
             </button>
-          </div>
-        </>
-      )}
+          </form>
+
+          {error && <p className="error-msg">{error}</p>}
+
+          {result && meta && (
+            <div className={`card ${show ? "show" : ""}`}>
+              <div className="verdict-label">RISK ASSESSMENT</div>
+              <div className={`verdict ${meta.className}`}>{result.risk}</div>
+              <p className="summary">{result.summary}</p>
+
+              <div className={`investigate ${meta.className}`}>
+                <h2>Investigate Further</h2>
+                <ul>
+                  {result.questions.map((q, i) => (
+                    <li key={i}>
+                      {meta.icon}
+                      <span>{q}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <form className="followup-form" onSubmit={handleFollowUp}>
+                  <input
+                    type="text"
+                    value={followUpQ}
+                    onChange={(e) => setFollowUpQ(e.target.value)}
+                    placeholder="Ask a follow-up question…"
+                  />
+                  <button type="submit" disabled={followUpLoading || !followUpQ.trim()}>
+                    {followUpLoading ? "..." : "Ask"}
+                  </button>
+                </form>
+                {followUpA && <p className="followup-answer">{followUpA}</p>}
+
+                <button className="again-btn" onClick={handleAgain}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 12a9 9 0 0115.3-6.4M21 12a9 9 0 01-15.3 6.4" />
+                    <path d="M3 4v5h5M21 20v-5h-5" />
+                  </svg>
+                  Analyze Another
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

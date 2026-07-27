@@ -10,7 +10,31 @@ function fmtRWF(n: number) {
 export default function InvestmentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const option = investmentOptions.find((o) => o.id === id);
+  const [option, setOption] = useState<InvestmentOption | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API_URL}/investments`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          const found = data.options.find((o: InvestmentOption) => o.option_id === id);
+          setOption(found || null);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="px-8 py-20 text-center">
+          <p className="text-[var(--color-text-muted)]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const [amount, setAmount] = useState(option?.minEntryValue ?? 0);
   const [toast, setToast] = useState<string | null>(null);
@@ -42,12 +66,11 @@ export default function InvestmentDetail() {
   return (
     <div className="min-h-screen">
       <Navbar />
-
       <button
         onClick={() => navigate("/invest")}
         className="text-[var(--color-text-muted)] px-8 pt-6 pb-2 block"
       >
-        ← Back
+        Back
       </button>
 
       {/* Full-bleed hero */}

@@ -75,7 +75,28 @@ ${text}`,
   }
 }
 
+async function askFollowUp(originalText, riskLevel, summary, question) {
+  try {
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-5",
+      max_tokens: 400,
+      system: `You are WealthMap's AI Financial Fraud Analyst. You already analyzed an investment pitch and gave a risk verdict. Now answer a specific follow-up question about it, briefly and directly, in plain text (no JSON, no markdown).`,
+      messages: [
+        {
+          role: "user",
+          content: `Original pitch: "${originalText}"\n\nYour verdict: ${riskLevel} - ${summary}\n\nFollow-up question: ${question}`,
+        },
+      ],
+    });
+    return message.content[0].text.trim();
+  } catch (error) {
+    console.error("Claude Follow-up Error:", error);
+    throw new Error("Unable to answer follow-up.");
+  }
+}
+
 module.exports = {
   analyzeInvestment,
+  askFollowUp,
 };
 
