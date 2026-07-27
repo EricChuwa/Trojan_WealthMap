@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { investmentOptions, getRiskGradient } from "./InvestmentRoadmap";
 
+// update
+
 function fmtRWF(n: number) {
   return "RWF " + Math.round(n).toLocaleString("en-RW");
 }
