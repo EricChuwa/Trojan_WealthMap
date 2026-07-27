@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { JSX } from "react";
 import Navbar from "../components/Navbar";
 
 const API_URL = import.meta.env.VITE_API_URL;

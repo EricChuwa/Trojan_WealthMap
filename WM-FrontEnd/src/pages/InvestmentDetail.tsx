@@ -1,25 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { investmentOptions, getRiskGradient } from "./InvestmentRoadmap";
+import { RISK_GRADIENTS, fmtRWF, type InvestmentOption } from "./InvestmentRoadmap";
 
-function fmtRWF(n: number) {
-  return "RWF " + Math.round(n).toLocaleString("en-RW");
-}
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function InvestmentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [option, setOption] = useState<InvestmentOption | null>(null);
   const [loading, setLoading] = useState(true);
+  const [amount, setAmount] = useState(0);
 
   useEffect(() => {
     fetch(`${API_URL}/investments`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
-          const found = data.options.find((o: InvestmentOption) => o.option_id === id);
+          const found = data.options.find(
+            (o: InvestmentOption) => o.option_id === id,
+          );
           setOption(found || null);
+          if (found) setAmount(found.min_amount);
         }
       })
       .finally(() => setLoading(false));
@@ -36,9 +38,6 @@ export default function InvestmentDetail() {
     );
   }
 
-  const [amount, setAmount] = useState(option?.minEntryValue ?? 0);
-  const [toast, setToast] = useState<string | null>(null);
-
   if (!option) {
     return (
       <div className="min-h-screen">
@@ -52,16 +51,8 @@ export default function InvestmentDetail() {
     );
   }
 
-  const gradient = getRiskGradient(option.riskLabel);
-  const projected =
-    option.yieldPct != null
-      ? fmtRWF(amount * (1 + option.yieldPct / 100))
-      : "Not predictable";
-
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2200);
-  }
+  const gradient = RISK_GRADIENTS[option.risk_level] ?? RISK_GRADIENTS.medium;
+  const projected = fmtRWF(amount * (1 + option.expected_return / 100));
 
   return (
     <div className="min-h-screen">
@@ -92,16 +83,12 @@ export default function InvestmentDetail() {
             {option.name}
           </p>
           <p className="font-mono text-sm text-white/70">
-            Level {option.level} · {option.riskLabel} · {option.country}
+            {option.risk_level} risk · {option.country}
           </p>
         </div>
       </div>
 
       <div className="px-8 py-8">
-        <p className="text-[var(--color-text-secondary)] mb-8 max-w-2xl">
-          {option.description}
-        </p>
-
         {/* Calculator */}
         <div className="bg-[var(--color-card)] rounded-2xl p-6 mb-6 max-w-lg">
           <label className="text-xs uppercase tracking-widest text-[var(--color-text-muted)] block mb-3">
@@ -113,7 +100,7 @@ export default function InvestmentDetail() {
             </span>
             <input
               type="number"
-              min={option.minEntryValue}
+              min={option.min_amount}
               step={100}
               value={amount}
               onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
@@ -125,11 +112,11 @@ export default function InvestmentDetail() {
             <span className="text-[var(--color-text-muted)]">
               Minimum entry
             </span>
-            <span className="font-mono">{option.minimum}</span>
+            <span className="font-mono">{fmtRWF(option.min_amount)}</span>
           </div>
           <div className="flex justify-between text-sm py-2 border-t border-[var(--color-border)]">
             <span className="text-[var(--color-text-muted)]">Est. yield</span>
-            <span className="font-mono">{option.yieldLabel}</span>
+            <span className="font-mono">{option.expected_return}% p.a.</span>
           </div>
           <div className="flex justify-between text-sm py-2 border-t border-[var(--color-border)]">
             <span className="text-[var(--color-text-muted)]">
@@ -140,26 +127,7 @@ export default function InvestmentDetail() {
             </span>
           </div>
         </div>
-
-        <a
-          href={option.platformUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => showToast(`Opening ${option.platformName}...`)}
-          className="block text-center py-3 rounded-full font-medium mb-2 max-w-md bg-gradient-to-r from-[var(--color-gold-light)] to-[var(--color-emerald-light)] text-[var(--color-obsidian)]"
-        >
-          {option.ctaLabel} →
-        </a>
-        <p className="text-xs text-[var(--color-text-muted)]">
-          Opens the official {option.platformName} platform.
-        </p>
       </div>
-
-      {toast && (
-        <div className="fixed bottom-7 left-1/2 -translate-x-1/2 bg-[var(--color-card)] border border-[var(--color-border)] px-5 py-3 rounded-xl text-sm z-50">
-          {toast}
-        </div>
-      )}
     </div>
   );
 }
