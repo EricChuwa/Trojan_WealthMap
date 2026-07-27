@@ -48,7 +48,7 @@ const getGoals = async (req, res) => {
 };
 
 const createGoal = async (req, res) => {
-  const { name, category, targetAmount, monthsLeft } = req.body;
+  const { name, category, targetAmount, monthsLeft, savedAmount: rawSaved } = req.body;
   const userId = req.user.id; // comes from the JWT via auth middleware — never trust a user_id from the request body
 
   if (!name || !category) {
@@ -72,17 +72,29 @@ const createGoal = async (req, res) => {
     });
   }
 
+  // savedAmount is optional on creation — defaults set to 0
+  const parsedSaved = Number(rawSaved);
+  const savedAmount = !isNaN(parsedSaved) && parsedSaved >= 0 ? parsedSaved : 0;
+
+  if (savedAmount > targetAmount) {
+    return res.status(400).json({
+      success: false,
+      message: "Saved amount cannot exceed the target amount.",
+    });
+  }
+
   // The pace: locked in now, never silently recalculated by later edits.
   const targetDate = new Date();
   targetDate.setMonth(targetDate.getMonth() + monthsLeft);
   const monthlyRequired = Math.round((targetAmount / monthsLeft) * 100) / 100;
+  const status = savedAmount >= targetAmount ? "completed" : "active";
 
   try {
     const result = await pool.query(
       `INSERT INTO goals (user_id, name, category, target_amount, target_date, monthly_required, saved_amount, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 0, 'active')
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [userId, name, category, targetAmount, targetDate, monthlyRequired],
+      [userId, name, category, targetAmount, targetDate, monthlyRequired, savedAmount, status],
     );
 
     res.status(201).json({

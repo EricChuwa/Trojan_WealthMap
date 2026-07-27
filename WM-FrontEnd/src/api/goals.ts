@@ -25,6 +25,7 @@ export async function createGoal(data: {
   name: string;
   category: Goal["category"];
   targetAmount: number;
+  savedAmount?: number;
   monthsLeft: number;
 }): Promise<Goal> {
   const res = await authFetch("/goals", {
