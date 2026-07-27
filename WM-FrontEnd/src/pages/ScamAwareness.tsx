@@ -149,25 +149,14 @@ export default function ScamAwareness() {
     ...Array.from(new Set(alerts.map((a) => a.category))),
   ];
 
-  const getSeverityStyles = (severity: string) => {
+  const getSeverityBorderColor = (severity: string) => {
     switch (severity) {
       case "Critical":
-        return "bg-red-950/40 text-red-400 border-red-900/50";
+        return "bg-red-500";
       case "High":
-        return "bg-amber-950/40 text-amber-400 border-amber-900/50";
+        return "bg-amber-500";
       default:
-        return "bg-yellow-950/40 text-yellow-400 border-yellow-900/50";
-    }
-  };
-
-  const getSeverityIcon = (severity: string) => {
-    switch (severity) {
-      case "Critical":
-        return "🚨";
-      case "High":
-        return "⚠️";
-      default:
-        return "💡";
+        return "bg-yellow-400";
     }
   };
 
@@ -188,7 +177,6 @@ export default function ScamAwareness() {
 
         <div className="mb-10 bg-amber-950/20 border border-amber-900/40 rounded-xl p-4 md:p-5 flex items-start gap-4 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500" />
-          <span className="text-2xl mt-0.5">⚠️</span>
           <div>
             <h2 className="font-semibold text-amber-400 text-sm md:text-base mb-1 font-body">
               Golden Safety Rule
@@ -211,7 +199,7 @@ export default function ScamAwareness() {
             Security Layer
           </span>
           <h1 className="font-display text-4xl md:text-5xl bg-gradient-to-r from-text-primary via-gold-light to-amber-500 bg-clip-text text-transparent mt-1 mb-3">
-            Scam School Alerts
+            Scam Alerts
           </h1>
           <p className="text-text-muted max-w-2xl text-sm md:text-base leading-relaxed">
             Scammers are smart, but you can be smarter. Learn to recognize the
@@ -274,9 +262,7 @@ export default function ScamAwareness() {
             </div>
 
             <div className="bg-card border border-border rounded-xl p-5 shadow-md">
-              <h3 className="font-display text-xl text-amber-400 mb-3 flex items-center gap-2">
-                <span>🛡️</span> Quick Safety Tips
-              </h3>
+              <h3 className="font-display text-xl text-amber-400 mb-3">Quick Safety Tips</h3>
               <ul className="space-y-3 text-xs md:text-sm text-text-muted leading-relaxed">
                 <li className="flex gap-2">
                   <span className="text-amber-500">•</span>
@@ -334,19 +320,11 @@ export default function ScamAwareness() {
                     key={alert.id}
                     className="bg-card border border-border rounded-xl p-5 md:p-6 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/5 hover:border-amber-500/20 group relative overflow-hidden"
                   >
-                    <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-amber-500 to-amber-600 opacity-80" />
+                    <div className={`absolute top-0 left-0 w-1.5 h-full ${getSeverityBorderColor(alert.severity)}`} />
 
-                    <div className="flex flex-wrap justify-between items-center gap-2 mb-3.5 pl-2">
+                    <div className="mb-3.5 pl-2">
                       <span className="text-xs font-semibold tracking-wider uppercase text-amber-500">
                         {alert.category}
-                      </span>
-                      <span
-                        className={`text-xs px-2.5 py-1 rounded-full border font-medium flex items-center gap-1.5 ${getSeverityStyles(
-                          alert.severity,
-                        )}`}
-                      >
-                        <span>{getSeverityIcon(alert.severity)}</span>
-                        <span>{alert.severity} Risk</span>
                       </span>
                     </div>
 
@@ -384,9 +362,7 @@ export default function ScamAwareness() {
 
                       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5 text-xs md:text-sm">
                         <div className="bg-obsidian/40 border border-border/40 rounded-lg p-4 space-y-2.5">
-                          <h4 className="font-semibold text-red-400 flex items-center gap-1.5 mb-2">
-                            <span>🚨</span> Red Flags to Watch
-                          </h4>
+                          <h4 className="font-semibold text-red-400 mb-2">Red Flags to Watch</h4>
                           {alert.warningSigns.map((sign, idx) => (
                             <div
                               key={idx}
@@ -399,9 +375,7 @@ export default function ScamAwareness() {
                         </div>
 
                         <div className="bg-obsidian/40 border border-border/40 rounded-lg p-4 space-y-2.5">
-                          <h4 className="font-semibold text-emerald-400 flex items-center gap-1.5 mb-2">
-                            <span>✅</span> Safe Action to Take
-                          </h4>
+                          <h4 className="font-semibold text-emerald-400 mb-2">Safe Action to Take</h4>
                           {alert.whatToDo.map((step, idx) => (
                             <div
                               key={idx}
@@ -420,8 +394,10 @@ export default function ScamAwareness() {
             )}
 
             {!loading && filteredAlerts.length === 0 && (
-              <div className="bg-card border border-border rounded-xl p-8 text-center shadow-md">
-                <span className="text-4xl block mb-3">🔍</span>
+                <div className="bg-card border border-border rounded-xl p-8 text-center shadow-md">
+                <div className="mb-3">
+                  <svg className="w-8 h-8 mx-auto text-text-muted/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </div>
                 <h3 className="font-display text-xl mb-1 text-text-primary">
                   No scams found
                 </h3>

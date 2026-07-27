@@ -1,8 +1,9 @@
 const pool = require("../config/db");
+const { computeHealthScore } = require("../services/healthScore");
 
 // GET /api/dashboard
 // One call for the whole dashboard: the user's name, this month's money
-// figures, their latest health score, top goals, and investment options
+// figures, their live health score, top goals, and investment options
 // for their country. Anything with no data yet comes back null/empty
 // rather than erroring, so the page renders on a fresh account.
 const getDashboard = async (req, res) => {
@@ -11,7 +12,7 @@ const getDashboard = async (req, res) => {
   const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
   try {
-    const [userRes, budgetRes, txnRes, healthRes, goalsRes, investRes] =
+    const [userRes, budgetRes, txnRes, health, goalsRes, investRes] =
       await Promise.all([
         pool.query(
           `SELECT first_name, last_name, country, currency
@@ -31,16 +32,11 @@ const getDashboard = async (req, res) => {
             WHERE user_id = $1 AND to_char(txn_date, 'YYYY-MM') = $2`,
           [userId, month],
         ),
+        // Same live computation the Financial Health page uses, so the two
+        // screens always agree — no more reading an empty snapshots table.
+        computeHealthScore(userId, month),
         pool.query(
-          `SELECT overall_score, budget_score, goals_score,
-                  literacy_score, activity_score, streak_days, snapshot_date
-             FROM health_snapshots
-            WHERE user_id = $1
-            ORDER BY snapshot_date DESC LIMIT 1`,
-          [userId],
-        ),
-        pool.query(
-          `SELECT goal_id, name, category, target_amount, current_amount,
+          `SELECT goal_id, name, category, target_amount, saved_amount,
                   target_date, monthly_required
              FROM goals
             WHERE user_id = $1 AND status = 'active'
@@ -62,31 +58,26 @@ const getDashboard = async (req, res) => {
     const budget = budgetRes.rows[0] || null;
     const moneyIn = Number(txnRes.rows[0].money_in);
     const moneyOut = Number(txnRes.rows[0].money_out);
-    const health = healthRes.rows[0] || null;
 
     const goals = goalsRes.rows.map((g) => {
       const target = Number(g.target_amount);
-      const current = Number(g.current_amount || 0);
+      const current = Number(g.saved_amount || 0);
       const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+      const monthlyRequired = g.monthly_required ? Number(g.monthly_required) : null;
 
-      let monthsLeft = null;
-      if (g.target_date) {
-        const t = new Date(g.target_date);
-        monthsLeft = Math.max(
-          0,
-          (t.getFullYear() - now.getFullYear()) * 12 + (t.getMonth() - now.getMonth()),
-        );
-      }
+      const monthsLeft = monthlyRequired
+        ? Math.max(0, Math.ceil((target - current) / monthlyRequired))
+        : null;
 
       return {
         goal_id: g.goal_id,
         name: g.name,
         category: g.category,
         target_amount: target,
-        current_amount: current,
+        saved_amount: current,
         pct,
         months_left: monthsLeft,
-        monthly_required: g.monthly_required ? Number(g.monthly_required) : null,
+        monthly_required: monthlyRequired,
       };
     });
 
@@ -102,24 +93,20 @@ const getDashboard = async (req, res) => {
           }
         : null,
       money: {
-        // fall back to what actually arrived if no payday income was set
         income:
           budget && Number(budget.income) > 0 ? Number(budget.income) : moneyIn,
         spent: moneyOut,
         money_in: moneyIn,
         protected: budget ? Number(budget.savings_alloc) : 0,
       },
-      health: health
-        ? {
-            overall_score: health.overall_score,
-            budget_score: health.budget_score,
-            goals_score: health.goals_score,
-            literacy_score: health.literacy_score,
-            activity_score: health.activity_score,
-            streak_days: health.streak_days,
-            snapshot_date: health.snapshot_date,
-          }
-        : null,
+      health: {
+        overall_score: health.overall_score,
+        budget_score: health.budget_score,
+        goals_score: health.goals_score,
+        literacy_score: health.literacy_score,
+        activity_score: health.activity_score,
+        streak_days: health.streak_days,
+      },
       goals,
       investments: investRes.rows.map((o) => ({
         option_id: o.option_id,

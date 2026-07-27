@@ -13,6 +13,7 @@ import Learn from "./pages/Learn";
 import ScamAwareness from "./pages/ScamAwareness";
 import Goals from "./pages/Goals";
 import SmellTest from "./pages/SmellTest";
+import ProtectedRoute from "./components/ProtectedRoute";
 import "./index.css";
 
 function App() {
@@ -22,16 +23,79 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/health-history" element={<HealthHistory />} />
-        <Route path="/budget" element={<Budget />} />
-        <Route path="/invest" element={<InvestmentRoadmap />} />
-        <Route path="/invest/:id" element={<InvestmentDetail />} />
-        <Route path="/payday" element={<IncomeEntryScreen />} />
-        <Route path="/payday/split" element={<SplitScreen />} />
-        <Route path="/learn" element={<Learn />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/health-history"
+          element={
+            <ProtectedRoute>
+              <HealthHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/budget"
+          element={
+            <ProtectedRoute>
+              <Budget />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/invest"
+          element={
+            <ProtectedRoute>
+              <InvestmentRoadmap />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/invest/:id"
+          element={
+            <ProtectedRoute>
+              <InvestmentDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payday"
+          element={
+            <ProtectedRoute>
+              <IncomeEntryScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payday/split"
+          element={
+            <ProtectedRoute>
+              <SplitScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/learn"
+          element={
+            <ProtectedRoute>
+              <Learn />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/scams" element={<ScamAwareness />} />
-        <Route path="/goals" element={<Goals />} />
+        <Route
+          path="/goals"
+          element={
+            <ProtectedRoute>
+              <Goals />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/smell-test" element={<SmellTest />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

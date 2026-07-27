@@ -1,49 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-
-interface Goal {
-  id: number;
-  name: string;
-  targetAmount: number;
-  savedAmount: number;
-  monthsLeft: number;
-  category: "savings" | "purchase" | "emergency" | "investment";
-}
-
-const initialGoals: Goal[] = [
-  {
-    id: 1,
-    name: "Emergency Fund",
-    targetAmount: 1_500_000,
-    savedAmount: 510_000,
-    monthsLeft: 9,
-    category: "emergency",
-  },
-  {
-    id: 2,
-    name: "MacBook Pro",
-    targetAmount: 2_200_000,
-    savedAmount: 1_496_000,
-    monthsLeft: 6,
-    category: "purchase",
-  },
-  {
-    id: 3,
-    name: "Travel – Zanzibar",
-    targetAmount: 800_000,
-    savedAmount: 96_000,
-    monthsLeft: 11,
-    category: "savings",
-  },
-  {
-    id: 4,
-    name: "Investment Seed",
-    targetAmount: 500_000,
-    savedAmount: 500_000,
-    monthsLeft: 0,
-    category: "investment",
-  },
-];
+import {
+  fetchGoals,
+  createGoal,
+  updateGoal,
+  deleteGoal,
+  type Goal,
+} from "../api/goals";
+import { SessionExpiredError } from "../api/auth";
 
 const categoryColors: Record<Goal["category"], string> = {
   emergency: "var(--color-gold-light)",
@@ -105,45 +70,61 @@ function GoalCard({
   goal,
   onEdit,
   onDelete,
+  onAdjust,
 }: {
   goal: Goal;
   onEdit: (g: Goal) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
+  onAdjust: (id: string, delta: number, type: "add" | "reduce") => void;
 }) {
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjusting, setAdjusting] = useState(false);
+
   const pct = Math.min(
     Math.round((goal.savedAmount / goal.targetAmount) * 100),
     100,
   );
   const accent = categoryColors[goal.category];
   const bg = categoryBg[goal.category];
-  const isComplete = pct >= 100;
+  const isComplete = goal.status === "completed";
+
+  function handleAdjust(type: "add" | "reduce") {
+    const delta = parseInt(adjustAmount);
+    if (!delta || delta <= 0) return;
+    setAdjusting(true);
+    onAdjust(goal.id, delta, type);
+    setAdjustAmount("");
+    setAdjusting(false);
+  }
 
   return (
     <div
       className="rounded-2xl p-6 flex flex-col gap-4 transition-all duration-300 hover:brightness-110 relative group"
       style={{ background: bg, border: `1px solid ${accent}33` }}
     >
-      {/* Edit / Delete buttons — fade in on hover */}
+
       <div
         className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
         style={{ zIndex: 10 }}
       >
-        <button
-          onClick={() => onEdit(goal)}
-          title="Edit goal"
-          className="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110"
-          style={{
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.14)",
-            color: accent,
-          }}
-        >
-          <IconEdit />
-        </button>
+        {!isComplete && (
+          <button
+            onClick={() => onEdit(goal)}
+            title="Edit goal"
+            className="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110 cursor-pointer"
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              color: accent,
+            }}
+          >
+            <IconEdit />
+          </button>
+        )}
         <button
           onClick={() => onDelete(goal.id)}
           title="Delete goal"
-          className="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110"
+          className="flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150 hover:scale-110 cursor-pointer"
           style={{
             background: "rgba(255,60,60,0.10)",
             border: "1px solid rgba(255,60,60,0.22)",
@@ -194,11 +175,82 @@ function GoalCard({
         <span className="font-mono">{fmt(goal.savedAmount)}</span>
         <span className="font-mono">{fmt(goal.targetAmount)}</span>
       </div>
+
+      {!isComplete && (
+        <div className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-10">
+          <div
+            className="text-[11px] text-center rounded-lg py-2 px-3"
+            style={{ background: "rgba(255,255,255,0.06)", color: "var(--color-text-muted)" }}
+          >
+            Save{" "}
+            <span style={{ color: accent }} className="font-mono font-semibold">
+              {fmt(goal.monthlyRequired)}
+            </span>
+            /month to reach this goal
+          </div>
+        </div>
+      )}
+
+      {!isComplete && (
+        <div
+          className="flex items-center gap-2 pt-1"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+        >
+          <button
+            type="button"
+            disabled={adjusting}
+            onClick={() => handleAdjust("reduce")}
+            title="Reduce saved amount"
+            className="flex items-center justify-center w-8 h-8 rounded-lg text-base font-bold flex-shrink-0 cursor-pointer transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-40"
+            style={{
+              background: "rgba(255,60,60,0.12)",
+              border: "1px solid rgba(255,60,60,0.25)",
+              color: "#ff6b6b",
+            }}
+          >
+
+          </button>
+
+          <div className="flex-1 relative">
+            <input
+              type="number"
+              min="0"
+              className="w-full rounded-lg px-3 py-1.5 text-xs font-mono text-center outline-none"
+              style={{
+                background: "rgba(0,0,0,0.35)",
+                border: "1px solid var(--color-border)",
+                color: "var(--color-text-primary)",
+              }}
+              placeholder="Amount (RWF)"
+              value={adjustAmount}
+              onChange={(e) => setAdjustAmount(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAdjust("add");
+              }}
+            />
+          </div>
+
+          <button
+            type="button"
+            disabled={adjusting}
+            onClick={() => handleAdjust("add")}
+            title="Add to saved amount"
+            className="flex items-center justify-center w-8 h-8 rounded-lg text-base font-bold flex-shrink-0 cursor-pointer transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-40"
+            style={{
+              background: "rgba(45,122,95,0.20)",
+              border: `1px solid ${accent}55`,
+              color: accent,
+            }}
+          >
+            +
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-type FilterKey = "all" | Goal["category"];
+type FilterKey = "all" | Goal["category"] | "completed";
 
 const filters: { label: string; key: FilterKey }[] = [
   { label: "All", key: "all" },
@@ -206,97 +258,163 @@ const filters: { label: string; key: FilterKey }[] = [
   { label: "Purchase", key: "purchase" },
   { label: "Savings", key: "savings" },
   { label: "Investment", key: "investment" },
+  { label: "Completed", key: "completed" },
 ];
 
 export default function Goals() {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
   const [showModal, setShowModal] = useState(false);
   const [newGoal, setNewGoal] = useState({
-    name: "",
-    targetAmount: "",
-    monthsLeft: "",
-    category: "savings" as Goal["category"],
-  });
-  const [goals, setGoals] = useState<Goal[]>(initialGoals);
-
-  /* ── Edit state ── */
-  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-  const [editForm, setEditForm] = useState({
     name: "",
     targetAmount: "",
     savedAmount: "",
     monthsLeft: "",
     category: "savings" as Goal["category"],
   });
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  function refreshGoals() {
+    return fetchGoals()
+      .then(setGoals)
+      .catch((err: Error) => {
+        if (err instanceof SessionExpiredError) {
+          navigate("/login");
+          return;
+        }
+        setLoadError(err.message);
+      })
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    refreshGoals();
+  }, []);
+
+  function retryLoad() {
+    setLoading(true);
+    setLoadError(null);
+    refreshGoals();
+  }
+
+  /* ── Edit state ── */
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    targetAmount: "",
+    category: "savings" as Goal["category"],
+  });
 
   const filtered =
-    activeFilter === "all"
-      ? goals
-      : goals.filter((g) => g.category === activeFilter);
+    activeFilter === "completed"
+      ? goals.filter((g) => g.status === "completed")
+      : goals.filter(
+        (g) =>
+          g.status !== "completed" &&
+          (activeFilter === "all" || g.category === activeFilter),
+      );
 
   const totalTarget = goals.reduce((s, g) => s + g.targetAmount, 0);
   const totalSaved = goals.reduce((s, g) => s + g.savedAmount, 0);
-  const overallPct = Math.round((totalSaved / totalTarget) * 100);
+  const overallPct =
+    totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
 
-  function handleAdd(e: React.FormEvent) {
+  async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    const next: Goal = {
-      id: Date.now(),
-      name: newGoal.name.trim() || "Untitled Goal",
-      targetAmount: parseInt(newGoal.targetAmount) || 100_000,
-      savedAmount: 0,
-      monthsLeft: parseInt(newGoal.monthsLeft) || 12,
-      category: newGoal.category,
-    };
-    setGoals((prev) => [next, ...prev]);
-    setNewGoal({
-      name: "",
-      targetAmount: "",
-      monthsLeft: "",
-      category: "savings",
-    });
-    setShowModal(false);
+    setActionError(null);
+    try {
+      const created = await createGoal({
+        name: newGoal.name.trim() || "Untitled Goal",
+        targetAmount: parseInt(newGoal.targetAmount) || 100_000,
+        savedAmount:
+          !isNaN(parseInt(newGoal.savedAmount, 10)) &&
+          parseInt(newGoal.savedAmount, 10) >= 0
+            ? parseInt(newGoal.savedAmount, 10)
+            : 0,
+        monthsLeft: parseInt(newGoal.monthsLeft) || 12,
+        category: newGoal.category,
+      });
+      setGoals((prev) => [created, ...prev]);
+      setNewGoal({
+        name: "",
+        targetAmount: "",
+        savedAmount: "",
+        monthsLeft: "",
+        category: "savings",
+      });
+      setShowModal(false);
+    } catch (err) {
+      setActionError((err as Error).message);
+    }
   }
 
   function openEdit(goal: Goal) {
+    if (goal.status === "completed") return;
     setEditingGoal(goal);
     setEditForm({
       name: goal.name,
       targetAmount: String(goal.targetAmount),
-      savedAmount: String(goal.savedAmount),
-      monthsLeft: String(goal.monthsLeft),
       category: goal.category,
     });
   }
 
-  function handleEdit(e: React.FormEvent) {
+  async function handleEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editingGoal) return;
-    setGoals((prev) =>
-      prev.map((g) =>
-        g.id === editingGoal.id
-          ? {
-              ...g,
-              name: editForm.name.trim() || g.name,
-              targetAmount: parseInt(editForm.targetAmount) || g.targetAmount,
-              savedAmount:
-                parseInt(editForm.savedAmount) >= 0
-                  ? parseInt(editForm.savedAmount)
-                  : g.savedAmount,
-              monthsLeft:
-                parseInt(editForm.monthsLeft) >= 0
-                  ? parseInt(editForm.monthsLeft)
-                  : g.monthsLeft,
-              category: editForm.category,
-            }
-          : g,
-      ),
-    );
-    setEditingGoal(null);
+    setActionError(null);
+    try {
+      const updated = await updateGoal(editingGoal.id, {
+        name: editForm.name.trim() || editingGoal.name,
+        targetAmount:
+          parseInt(editForm.targetAmount) || editingGoal.targetAmount,
+        savedAmount: editingGoal.savedAmount, // unchanged — adjustments happen on the card
+        category: editForm.category,
+      });
+      setGoals((prev) =>
+        prev.map((g) => (g.id === editingGoal.id ? updated : g)),
+      );
+      setEditingGoal(null);
+    } catch (err) {
+      setActionError((err as Error).message);
+    }
   }
 
-  function handleDelete(id: number) {
-    setGoals((prev) => prev.filter((g) => g.id !== id));
+  async function handleAdjust(
+    id: string,
+    delta: number,
+    type: "add" | "reduce",
+  ) {
+    const goal = goals.find((g) => g.id === id);
+    if (!goal) return;
+    setActionError(null);
+    const newSaved =
+      type === "add"
+        ? goal.savedAmount + delta
+        : Math.max(0, goal.savedAmount - delta);
+    try {
+      const updated = await updateGoal(id, {
+        name: goal.name,
+        targetAmount: goal.targetAmount,
+        savedAmount: newSaved,
+        category: goal.category,
+      });
+      setGoals((prev) => prev.map((g) => (g.id === id ? updated : g)));
+    } catch (err) {
+      setActionError((err as Error).message);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setActionError(null);
+    try {
+      await deleteGoal(id);
+      setGoals((prev) => prev.filter((g) => g.id !== id));
+    } catch (err) {
+      setActionError((err as Error).message);
+    }
   }
 
   return (
@@ -337,7 +455,7 @@ export default function Goals() {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5"
+            className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer hover:opacity-90 hover:-translate-y-0.5 hover:shadow-lg active:scale-95"
             style={{ background: "var(--color-gold-light)", color: "#0d0d0d" }}
           >
             + New Goal
@@ -412,15 +530,15 @@ export default function Goals() {
             <button
               key={f.key}
               onClick={() => setActiveFilter(f.key)}
-              className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200"
+              className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95"
               style={
                 activeFilter === f.key
                   ? { background: "var(--color-gold-light)", color: "#0d0d0d" }
                   : {
-                      background: "var(--color-card)",
-                      color: "var(--color-text-muted)",
-                      border: "1px solid var(--color-border)",
-                    }
+                    background: "var(--color-card)",
+                    color: "var(--color-text-muted)",
+                    border: "1px solid var(--color-border)",
+                  }
               }
             >
               {f.label}
@@ -428,9 +546,45 @@ export default function Goals() {
           ))}
         </div>
 
+        {actionError && (
+          <div
+            className="relative z-10 mb-4 rounded-xl px-4 py-3 text-sm"
+            style={{
+              background: "rgba(255,60,60,0.10)",
+              border: "1px solid rgba(255,60,60,0.22)",
+              color: "#ff6b6b",
+            }}
+          >
+            {actionError}
+          </div>
+        )}
+
         {/* Goal cards grid */}
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <p
+              className="col-span-full text-center py-16"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              Loading your goals...
+            </p>
+          ) : loadError ? (
+            <div className="col-span-full flex flex-col items-center gap-4 py-16">
+              <p style={{ color: "var(--color-text-muted)" }}>
+                Couldn't load your goals — {loadError}
+              </p>
+              <button
+                onClick={retryLoad}
+                className="px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5 active:scale-95"
+                style={{
+                  background: "var(--color-gold-light)",
+                  color: "#0d0d0d",
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
             <p
               className="col-span-full text-center py-16"
               style={{ color: "var(--color-text-muted)" }}
@@ -444,6 +598,7 @@ export default function Goals() {
                 goal={goal}
                 onEdit={openEdit}
                 onDelete={handleDelete}
+                onAdjust={handleAdjust}
               />
             ))
           )}
@@ -523,6 +678,36 @@ export default function Goals() {
                   className="block text-xs uppercase tracking-widest mb-1.5"
                   style={{ color: "var(--color-text-muted)" }}
                 >
+                  Already saved (RWF)
+                  <span
+                    className="ml-2 normal-case tracking-normal font-normal"
+                    style={{ color: "var(--color-text-muted)", opacity: 0.6, fontSize: "10px" }}
+                  >
+                    optional — leave blank to start at 0
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full rounded-xl px-4 py-3 text-sm font-mono outline-none"
+                  style={{
+                    background: "#0d0d0d",
+                    border: "1px solid var(--color-border)",
+                    color: "var(--color-text-primary)",
+                  }}
+                  placeholder="e.g. 50000"
+                  value={newGoal.savedAmount}
+                  onChange={(e) =>
+                    setNewGoal((p) => ({ ...p, savedAmount: e.target.value }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label
+                  className="block text-xs uppercase tracking-widest mb-1.5"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
                   Months to reach goal
                 </label>
                 <input
@@ -574,7 +759,7 @@ export default function Goals() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-80"
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer hover:opacity-80 hover:bg-white/5 active:scale-95"
                   style={{
                     background: "transparent",
                     border: "1px solid var(--color-border)",
@@ -585,7 +770,7 @@ export default function Goals() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5"
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer hover:opacity-90 hover:-translate-y-0.5 hover:shadow-lg active:scale-95"
                   style={{
                     background: "var(--color-gold-light)",
                     color: "#0d0d0d",
@@ -681,53 +866,6 @@ export default function Goals() {
                 />
               </div>
 
-              {/* Saved so far */}
-              <div>
-                <label
-                  className="block text-xs uppercase tracking-widest mb-1.5"
-                  style={{ color: "var(--color-text-muted)" }}
-                >
-                  Saved so far (RWF)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  className="w-full rounded-xl px-4 py-3 text-sm font-mono outline-none"
-                  style={{
-                    background: "#0d0d0d",
-                    border: "1px solid var(--color-border)",
-                    color: "var(--color-text-primary)",
-                  }}
-                  value={editForm.savedAmount}
-                  onChange={(e) =>
-                    setEditForm((p) => ({ ...p, savedAmount: e.target.value }))
-                  }
-                />
-              </div>
-
-              {/* Months left */}
-              <div>
-                <label
-                  className="block text-xs uppercase tracking-widest mb-1.5"
-                  style={{ color: "var(--color-text-muted)" }}
-                >
-                  Months to reach goal
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  className="w-full rounded-xl px-4 py-3 text-sm font-mono outline-none"
-                  style={{
-                    background: "#0d0d0d",
-                    border: "1px solid var(--color-border)",
-                    color: "var(--color-text-primary)",
-                  }}
-                  value={editForm.monthsLeft}
-                  onChange={(e) =>
-                    setEditForm((p) => ({ ...p, monthsLeft: e.target.value }))
-                  }
-                />
-              </div>
 
               {/* Category */}
               <div>
@@ -763,7 +901,7 @@ export default function Goals() {
                 <button
                   type="button"
                   onClick={() => setEditingGoal(null)}
-                  className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-80"
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer hover:opacity-80 hover:bg-white/5 active:scale-95"
                   style={{
                     background: "transparent",
                     border: "1px solid var(--color-border)",
@@ -774,7 +912,7 @@ export default function Goals() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5"
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer hover:opacity-90 hover:-translate-y-0.5 hover:shadow-lg active:scale-95"
                   style={{
                     background: "var(--color-gold-light)",
                     color: "#0d0d0d",
