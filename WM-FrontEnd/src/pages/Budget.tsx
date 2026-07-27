@@ -12,6 +12,7 @@ import {
   type FlowItem,
   type FlowLedger,
 } from "../api/flow";
+import { SessionExpiredError } from "../api/auth";
 
 type Tab = "overview" | "transactions";
 type Category = "need" | "want" | "saving";
@@ -92,9 +93,11 @@ export default function Budget() {
         setSelectedGroup(flow.groups[0].group_id);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not load Flow";
-      setError(message);
-      if (message.toLowerCase().includes("session")) navigate("/login");
+      if (err instanceof SessionExpiredError) {
+        navigate("/login");
+        return;
+      }
+      setError(err instanceof Error ? err.message : "Could not load Flow");
     } finally {
       setLoading(false);
     }

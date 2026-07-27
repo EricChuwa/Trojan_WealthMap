@@ -32,6 +32,8 @@ app.use("/api/fraud", fraudRoutes);
 app.use("/fraud", fraudRoutes);
 app.use("/api/flow", flowRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/learn", learnRoutes);
+app.use("/api/health", healthRoutes);
 app.use("/api/investments", investmentRoutes);
 
 app.get("/", (req, res) => {
