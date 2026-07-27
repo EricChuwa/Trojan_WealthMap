@@ -127,6 +127,29 @@ const randomAmount = (min, max, step = 500) =>
 const makeRef = () =>
   String(Math.floor(Math.random() * 9e10) + 1e10);
 
+// Realistic failure notifications. These deliberately mirror real transaction
+// wording (amount, merchant/recipient) so the parser has to actually
+// recognise the failure phrase rather than just "no amount found" — proving
+// the parser distinguishes "understood, and it failed" from "gibberish".
+function buildFailedMessage(dateStr) {
+  const amt = randomAmount(1000, 60000, 500);
+  const templates = [
+    () =>
+      `Your payment of ${amt.toLocaleString("en-US")} RWF to ${pick(MERCHANTS)} has failed due to insufficient balance. Please top up and try again. ${dateStr}`,
+    () =>
+      `Your transaction of ${amt.toLocaleString("en-US")} RWF to ${pick(SENDERS)} was declined. Please contact your service provider. ${dateStr}`,
+    () =>
+      `Transaction failed: incorrect PIN entered. Your payment of ${amt.toLocaleString("en-US")} RWF was not completed. ${dateStr}`,
+    () =>
+      `Your transaction of ${amt.toLocaleString("en-US")} RWF could not be completed due to network error. Please try again later. ${dateStr}`,
+    () =>
+      `Transfer of ${amt.toLocaleString("en-US")} RWF failed: recipient number not registered on Mobile Money. ${dateStr}`,
+    () =>
+      `This transaction of ${amt.toLocaleString("en-US")} RWF exceeds your daily limit. ${dateStr}`,
+  ];
+  return { amount: amt, text: pick(templates)() };
+}
+
 function buildMessage(kind, balance, dateStr) {
   if (kind === "salary") {
     const amt = randomAmount(80000, 450000, 5000);
@@ -156,15 +179,26 @@ function buildMessage(kind, balance, dateStr) {
   };
 }
 
-// POST /api/flow/sms/simulate   { count?, kind?, starting_balance? }
+// POST /api/flow/sms/simulate
+//   { count?, kind?, months?, failure_rate?, starting_balance? }
 // kind: salary | received | payment | withdrawal | mixed (default)
+// months: how far back to spread messages (default 3, min 1, max 12)
+// failure_rate: fraction of generated messages that are failed transactions
+//   (default 0.08 = ~8%). Failed messages are parsed, correctly recognised,
+//   and deliberately NOT stored — this proves the parser tells a real
+//   transaction apart from one that never went through.
 const simulateSms = async (req, res) => {
   const userId = req.user.id;
-  const count = Math.min(Math.max(Number(req.body.count) || 1, 1), 30);
+  const count = Math.min(Math.max(Number(req.body.count) || 60, 1), 500);
   const kind = req.body.kind || "mixed";
+  const months = Math.min(Math.max(Number(req.body.months) || 3, 1), 12);
+  const failureRate = Math.min(
+    Math.max(req.body.failure_rate !== undefined ? Number(req.body.failure_rate) : 0.08, 0),
+    1,
+  );
+  const spanDays = months * 30;
 
   try {
-    // Continue from the last known balance so the running total stays coherent.
     const last = await pool.query(
       `SELECT balance_after FROM transactions
         WHERE user_id = $1 AND balance_after IS NOT NULL
@@ -179,19 +213,43 @@ const simulateSms = async (req, res) => {
           : 0;
 
     const created = [];
+    const failed = [];
     const skipped = [];
 
+    // Build the (date, isFailure) plan first, then sort chronologically so
+    // the running balance accumulates in real order rather than randomly —
+    // otherwise a message dated "yesterday" could be built after one dated
+    // "next week" and the balance trail wouldn't make sense.
+    const plan = [];
     for (let i = 0; i < count; i++) {
-      // Spread messages over the last two weeks, newest last.
       const d = new Date();
-      d.setDate(d.getDate() - Math.floor(Math.random() * 14));
-      const dateStr = d.toISOString().slice(0, 10);
+      d.setDate(d.getDate() - Math.floor(Math.random() * spanDays));
+      plan.push({ date: d, isFailure: Math.random() < failureRate });
+    }
+    plan.sort((a, b) => a.date - b.date);
+
+    for (const step of plan) {
+      const dateStr = step.date.toISOString().slice(0, 10);
+
+      if (step.isFailure) {
+        const built = buildFailedMessage(dateStr);
+        const parsed = parseMoMoMessage(built.text);
+        // Balance is deliberately untouched — the money never moved.
+        if (parsed.ok === false && parsed.isFailedTxn) {
+          failed.push({ message: built.text, reason: parsed.reason });
+        } else {
+          // Parser didn't recognise our own failure template — a bug, not
+          // expected in normal operation, but surfaced rather than hidden.
+          skipped.push({ message: built.text, reason: "unrecognised failure template" });
+        }
+        continue;
+      }
 
       let thisKind = kind;
       if (kind === "mixed") {
         const roll = Math.random();
         thisKind =
-          roll < 0.15 ? "salary" : roll < 0.35 ? "received" : roll < 0.85 ? "payment" : "withdrawal";
+          roll < 0.1 ? "salary" : roll < 0.3 ? "received" : roll < 0.85 ? "payment" : "withdrawal";
       }
 
       const built = buildMessage(thisKind, balance, dateStr);
@@ -212,10 +270,14 @@ const simulateSms = async (req, res) => {
 
     res.status(201).json({
       success: true,
+      months,
+      requested: count,
       created: created.length,
+      failed: failed.length,
       skipped: skipped.length,
       balance_after: balance,
       transactions: created,
+      failed_transactions: failed,
     });
   } catch (err) {
     console.error("Simulate SMS error:", err);
