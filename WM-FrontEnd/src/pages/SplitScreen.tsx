@@ -1,31 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
-interface Allocations {
-  needs: number;
-  wants: number;
-  savings: number;
-}
-
-interface BudgetResponse {
-  budgetId: number;
-  allocations: Allocations;
-}
-
-function mockPostBudget(income: number): Promise<BudgetResponse> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        budgetId: Math.floor(Math.random() * 1000) + 1,
-        allocations: {
-          needs: Math.round(income * 0.50),
-          wants: Math.round(income * 0.30),
-          savings: Math.round(income * 0.20),
-        },
-      });
-    }, 650);
-  });
-}
+import { createBudgetApi, type BudgetResponse } from '../api/budget';
+import { SessionExpiredError } from '../api/auth';
 
 function formatString(n: number): string {
   return n.toLocaleString('en-RW');
@@ -90,13 +66,17 @@ export default function SplitScreen() {
       try {
         setLoading(true);
         setError(null);
-        const result = await mockPostBudget(income);
+        const result = await createBudgetApi(income);
         if (!cancelled) {
           setData(result);
           setLoading(false);
         }
       } catch (err) {
         if (!cancelled) {
+          if (err instanceof SessionExpiredError) {
+            navigate('/login');
+            return;
+          }
           setError(err instanceof Error ? err.message : 'Something went wrong.');
           setLoading(false);
         }
@@ -104,7 +84,7 @@ export default function SplitScreen() {
     })();
 
     return () => { cancelled = true; };
-  }, [income]);
+  }, [income, navigate]);
 
   const alloc = data?.allocations;
 
@@ -142,7 +122,7 @@ export default function SplitScreen() {
         </h1>
         <p className="text-sm text-text-secondary">
           Based on{' '}
-          <strong className="text-gold font-semibold">RWF {formatString(income)}</strong>
+          <strong className="text-gold font-semibold">RWF {formatString(data?.totalIncome ?? income)}</strong>
           {' '}income
         </p>
       </header>
@@ -246,7 +226,7 @@ export default function SplitScreen() {
         disabled={loading || !!error}
         aria-label="Confirm and save this budget split"
         onClick={() => {
-          alert(`Budget confirmed! ID: ${data?.budgetId ?? '—'}`);
+          navigate('/dashboard');
         }}
       >
         Confirm Budget
