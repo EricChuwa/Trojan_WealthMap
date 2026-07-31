@@ -1,3 +1,4 @@
+const { calculateBudgetSplit } = require("../utils/budgetCalculator");
 const pool = require("../config/db");
 
 const createBudget = async (req, res) => {
@@ -18,9 +19,7 @@ const createBudget = async (req, res) => {
     });
   }
 
-  const needs = Math.round(income * 0.5 * 100) / 100;
-  const wants = Math.round(income * 0.3 * 100) / 100;
-  const savings = Math.round(income * 0.2 * 100) / 100;
+  const { needs, wants, savings } = calculateBudgetSplit(income);
 
   try {
     const result = await pool.query(
